@@ -4,7 +4,7 @@ use basic::{compile, parse, tokenize};
 use std::{fs, process};
 
 fn main() {
-    let content = fs::read_to_string("./hello.bas").expect("Failed to load source file");
+    let content = fs::read_to_string("./basic/hello.bas").expect("Failed to load source file");
 
     let mut stmts = Vec::new();
 
