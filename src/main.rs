@@ -13,13 +13,20 @@ fn main() {
         }
 
         match parse(tokens) {
-            Ok(stmt) => {
-                println!("{:?}", stmt);
-            }
+            Ok(_) => (),
             Err(msg) => {
                 eprintln!("{}", msg);
                 process::exit(1);
             }
         }
     }
+
+    println!("bits 64");
+    println!("global _start");
+    println!("section .data");
+    println!("section .text");
+    println!("_start:");
+    println!("    mov rax, 60");
+    println!("    xor rdi, rdi");
+    println!("    syscall");
 }
