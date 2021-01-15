@@ -13,7 +13,7 @@ pub enum ExprAst {
 
 #[derive(Debug)]
 pub enum StmtAst {
-    CallProc(String, ExprAst),
+    CallProc(String, Vec<ExprAst>),
 }
 
 pub fn tokenize(line: String) -> Vec<Token> {
@@ -29,6 +29,7 @@ pub fn tokenize(line: String) -> Vec<Token> {
             if c == '"' {
                 is_str_lit = false;
                 tokens.push(Token::StrLit(str_lit.borrow().clone()));
+                str_lit.borrow_mut().clear();
                 continue;
             }
 
@@ -58,18 +59,27 @@ pub fn parse(tokens: Vec<Token>) -> Result<StmtAst, String> {
     if let Some(head) = tokens.first() {
         match head {
             Token::Ident(ident) => {
-                if let Some(Token::StrLit(str_lit)) = tokens.get(1) {
-                    Ok(StmtAst::CallProc(
-                        ident.clone(),
-                        ExprAst::StrLit(str_lit.clone()),
-                    ))
+                let (expr_ast, rest) = parse_expr(&tokens[1..])?;
+                if rest.is_empty() {
+                    Ok(StmtAst::CallProc(ident.clone(), vec![expr_ast]))
                 } else {
-                    Err(String::from("Syntax Error"))
+                    Err(format!("Syntax error: Unexpected tokens\n  {:?}", rest))
                 }
             }
-            _ => Err(String::from("Syntax Error")),
+            _ => Err(String::from("Syntax error: Expected identifier")),
         }
     } else {
-        Err(String::from("Syntax Error"))
+        Err(String::from("Syntax error: No tokens found"))
+    }
+}
+
+pub fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
+    if let Some(head) = tokens.first() {
+        match head {
+            Token::StrLit(str_lit) => Ok((ExprAst::StrLit(str_lit.clone()), &tokens[1..])),
+            _ => Err(format!("Syntax error: Expected expression\n  {:?}", head)),
+        }
+    } else {
+        Err(String::from("Syntax error: Unexpected end of statement"))
     }
 }
