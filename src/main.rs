@@ -1,6 +1,6 @@
 extern crate basic;
 
-use basic::{parse, tokenize, ExprAst, StmtAst};
+use basic::{compile, parse, tokenize};
 use std::{fs, process};
 
 fn main() {
@@ -25,41 +25,11 @@ fn main() {
         }
     }
 
-    let mut data_section = String::from("section .data\n");
-    let mut text_section = String::from("section .text\n_start:\n");
-
-    for (i, stmt) in stmts.into_iter().enumerate() {
-        match stmt {
-            StmtAst::CallProc(proc, args) if proc.eq("PRINT") => {
-                if args.len() > 1 {
-                    eprintln!("Failed to compile: Too many arguments");
-                    process::exit(1);
-                }
-                if let Some(head) = args.first() {
-                    match head {
-                        ExprAst::StrLit(str_lit) => {
-                            data_section.push_str(format!("    dat{} db '{}', 0x0A\n", i, str_lit).as_str());
-                            text_section.push_str(format!("    mov rax, 1\n    mov rdi, 1\n    mov rsi, dat{}\n    mov rdx, {}\n    syscall\n", i, str_lit.len() + 1).as_str());
-                        }
-                    }
-                } else {
-                    eprintln!("Failed to compile: Too few arguments");
-                    process::exit(1);
-                }
-            }
-            _ => {
-                eprintln!("Failed to compile: Unknown procedure");
-                process::exit(1);
-            }
-        }
+    match compile(&stmts) {
+        Ok(asm) => println!("{}", asm),
+        Err(msg) => {
+            eprintln!("{}", msg);
+            process::exit(1);
+        },
     }
-
-    text_section.push_str("    mov rax, 60\n");
-    text_section.push_str("    xor rdi, rdi\n");
-    text_section.push_str("    syscall\n");
-
-    println!("bits 64");
-    println!("global _start");
-    print!("{}", data_section);
-    print!("{}", text_section);
 }
