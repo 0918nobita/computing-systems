@@ -30,6 +30,6 @@ fn main() {
         Err(msg) => {
             eprintln!("{}", msg);
             process::exit(1);
-        },
+        }
     }
 }

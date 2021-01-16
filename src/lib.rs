@@ -1,5 +1,45 @@
 use std::cell::RefCell;
 
+#[derive(Clone, Copy, Debug)]
+struct LocationEndpoint {
+    line: i32,
+    column: i32,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Location {
+    start: LocationEndpoint,
+    end: LocationEndpoint,
+}
+
+trait Locatable {
+    fn locate(&self) -> Location;
+}
+
+#[derive(Debug)]
+struct Identifier {
+    name: String,
+    location: Location,
+}
+
+impl Locatable for Identifier {
+    fn locate(&self) -> Location {
+        self.location
+    }
+}
+
+#[derive(Debug)]
+struct StringLiteral {
+    value: String,
+    location: Location,
+}
+
+impl Locatable for StringLiteral {
+    fn locate(&self) -> Location {
+        self.location
+    }
+}
+
 #[derive(Debug)]
 pub enum Token {
     Ident(String),
@@ -100,8 +140,12 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                 if let Some(head) = args.first() {
                     match head {
                         ExprAst::StrLit(str_lit) => {
-                            data_section.push_str(format!("    dat{} db '{}', 10, 0\n", i, str_lit).as_str());
-                            text_section.push_str(format!("    mov rdi, dat{}\n    call printString\n", i).as_str());
+                            data_section.push_str(
+                                format!("    dat{} db '{}', 10, 0\n", i, str_lit).as_str(),
+                            );
+                            text_section.push_str(
+                                format!("    mov rdi, dat{}\n    call printString\n", i).as_str(),
+                            );
                         }
                     }
                 } else {
@@ -135,5 +179,8 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
     text_section.push_str(".end:\n");
     text_section.push_str("    ret\n");
 
-    Ok(format!("bits 64\nglobal _start\n{}{}", data_section, text_section))
+    Ok(format!(
+        "bits 64\nglobal _start\n{}{}",
+        data_section, text_section
+    ))
 }
