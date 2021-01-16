@@ -56,7 +56,7 @@ pub enum StmtAst {
     CallProc(Identifier, Vec<ExprAst>),
 }
 
-pub fn tokenize(line: String, line_number: i32) -> Vec<Token> {
+pub fn tokenize(line: String, line_number: i32) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
 
     let mut is_keyword = false;
@@ -141,7 +141,11 @@ pub fn tokenize(line: String, line_number: i32) -> Vec<Token> {
         }))
     }
 
-    tokens
+    if is_str_lit {
+        Err(String::from("Syntax error: Expected end of string literal"))
+    } else {
+        Ok(tokens)
+    }
 }
 
 pub fn parse(tokens: Vec<Token>) -> Result<StmtAst, String> {
