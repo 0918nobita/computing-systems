@@ -1,4 +1,4 @@
 hello
 hello.o
-stack
-stack.o
+print-register
+print-register.o
