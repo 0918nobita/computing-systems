@@ -8,8 +8,8 @@ fn main() {
 
     let mut stmts = Vec::new();
 
-    for line in content.split("\n").into_iter() {
-        let tokens = tokenize(String::from(line));
+    for (i, line) in content.split("\n").into_iter().enumerate() {
+        let tokens = tokenize(String::from(line), i as i32);
         if tokens.is_empty() {
             continue;
         }

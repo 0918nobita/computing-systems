@@ -16,8 +16,8 @@ trait Locatable {
     fn locate(&self) -> Location;
 }
 
-#[derive(Debug)]
-struct Identifier {
+#[derive(Clone, Debug)]
+pub struct Identifier {
     name: String,
     location: Location,
 }
@@ -28,8 +28,8 @@ impl Locatable for Identifier {
     }
 }
 
-#[derive(Debug)]
-struct StringLiteral {
+#[derive(Clone, Debug)]
+pub struct StringLiteral {
     value: String,
     location: Location,
 }
@@ -42,33 +42,49 @@ impl Locatable for StringLiteral {
 
 #[derive(Debug)]
 pub enum Token {
-    Ident(String),
-    StrLit(String),
+    Ident(Identifier),
+    StrLit(StringLiteral),
 }
 
 #[derive(Debug)]
 pub enum ExprAst {
-    StrLit(String),
+    StrLit(StringLiteral),
 }
 
 #[derive(Debug)]
 pub enum StmtAst {
-    CallProc(String, Vec<ExprAst>),
+    CallProc(Identifier, Vec<ExprAst>),
 }
 
-pub fn tokenize(line: String) -> Vec<Token> {
+pub fn tokenize(line: String, line_number: i32) -> Vec<Token> {
     let mut tokens = Vec::new();
 
+    let mut is_keyword = false;
+    let mut keyword_start: i32 = 0;
     let mut keyword_acc = String::new();
 
     let mut is_str_lit = false;
+    let mut str_lit_start = 0;
     let str_lit = RefCell::new(String::new());
 
-    for c in line.chars() {
+    for (i, c) in line.chars().enumerate() {
         if is_str_lit {
             if c == '"' {
                 is_str_lit = false;
-                tokens.push(Token::StrLit(str_lit.borrow().clone()));
+                let location = Location {
+                    start: LocationEndpoint {
+                        line: line_number,
+                        column: str_lit_start,
+                    },
+                    end: LocationEndpoint {
+                        line: line_number,
+                        column: i as i32,
+                    },
+                };
+                tokens.push(Token::StrLit(StringLiteral {
+                    value: str_lit.borrow().clone(),
+                    location,
+                }));
                 str_lit.borrow_mut().clear();
                 continue;
             }
@@ -79,18 +95,50 @@ pub fn tokenize(line: String) -> Vec<Token> {
 
         if c.is_whitespace() {
             if !keyword_acc.is_empty() {
-                tokens.push(Token::Ident(keyword_acc.clone()));
+                let location = Location {
+                    start: LocationEndpoint {
+                        line: line_number,
+                        column: keyword_start,
+                    },
+                    end: LocationEndpoint {
+                        line: line_number,
+                        column: i as i32 - 1,
+                    },
+                };
+                tokens.push(Token::Ident(Identifier {
+                    name: keyword_acc.clone(),
+                    location,
+                }));
                 keyword_acc.clear();
+                is_keyword = false;
             }
         } else if c == '"' {
             is_str_lit = true;
+            str_lit_start = i as i32;
+        } else if !is_keyword {
+            is_keyword = true;
+            keyword_start = i as i32;
+            keyword_acc.push(c);
         } else {
             keyword_acc.push(c);
         }
     }
 
     if !keyword_acc.is_empty() {
-        tokens.push(Token::Ident(keyword_acc.clone()))
+        let location = Location {
+            start: LocationEndpoint {
+                line: line_number,
+                column: keyword_start,
+            },
+            end: LocationEndpoint {
+                line: line_number,
+                column: line.len() as i32 - 1,
+            },
+        };
+        tokens.push(Token::Ident(Identifier {
+            name: keyword_acc.clone(),
+            location,
+        }))
     }
 
     tokens
@@ -133,7 +181,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
 
     for (i, stmt) in stmts.into_iter().enumerate() {
         match stmt {
-            StmtAst::CallProc(proc, args) if proc.eq("PRINT") => {
+            StmtAst::CallProc(proc, args) if proc.name.eq("PRINT") => {
                 if args.len() > 1 {
                     return Err(String::from("Failed to compile: Too many arguments"));
                 }
@@ -141,7 +189,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                     match head {
                         ExprAst::StrLit(str_lit) => {
                             data_section.push_str(
-                                format!("    dat{} db '{}', 10, 0\n", i, str_lit).as_str(),
+                                format!("    dat{} db '{}', 10, 0\n", i, str_lit.value).as_str(),
                             );
                             text_section.push_str(
                                 format!("    mov rdi, dat{}\n    call printString\n", i).as_str(),
