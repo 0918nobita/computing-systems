@@ -26,7 +26,7 @@ fn main() {
     }
 
     match compile(&stmts) {
-        Ok(asm) => println!("{}", asm),
+        Ok(asm) => print!("{}", asm),
         Err(msg) => {
             eprintln!("{}", msg);
             process::exit(1);
