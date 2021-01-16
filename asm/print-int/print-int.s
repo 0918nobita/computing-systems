@@ -1,12 +1,14 @@
+; nasm -f elf64 print-char.s
+
 bits 64
-global _start
+global printInt
 
 section .data
     codes db '0123456789ABCDEF'
 
 section .text
-_start:
-    mov rax, 255           ; 表示する数値 N
+printInt:
+    mov rax, rdi           ; 表示する数値 N
     mov rdi, 1             ; ディスクリプタ (1 = stdout)
     mov rdx, 1             ; 文字列のバイト数
     mov rcx, 64            ; カウンタ i (64 → 0)
@@ -23,7 +25,4 @@ _start:
     pop rax                ; N を復元
     test rcx, rcx
     jnz .loop              ; i が 0 でなければジャンプする
-
-    mov rax, 60   ; sys_exit
-    xor rdi, rdi  ; 0
-    syscall
+    ret

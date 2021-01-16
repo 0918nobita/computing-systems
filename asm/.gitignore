@@ -1,6 +1,4 @@
+*.o
 funcall
-funcall.o
 hello
-hello.o
 print-register
-print-register.o

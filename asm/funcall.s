@@ -1,7 +1,3 @@
-; nasm -f elf64 funcall.s
-; ld -o funcall funcall.o
-; ./funcall
-
 bits 64
 global _start
 

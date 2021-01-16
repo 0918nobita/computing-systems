@@ -1,7 +1,3 @@
-; nasm -f elf64 hello.s
-; ld -o hello hello.o
-; ./hello
-
 bits 64
 global _start
 
