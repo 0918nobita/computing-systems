@@ -1,6 +1,6 @@
 NASM = nasm -f elf64
 
-all: hello print-register funcall string
+all: hello print-register funcall string print-string
 
 hello: hello.o
 	ld -o hello hello.o
@@ -26,7 +26,13 @@ string: string.o
 string.o:
 	$(NASM) string.s
 
+print-string: print-string.o
+	ld -o print-string print-string.o
+
+print-string.o: print-string.s
+	$(NASM) print-string.s
+
 .PHONY: clean
 clean:
 	rm -f *.o
-	rm -f hello print-register funcall string
+	rm -f hello print-register funcall string print-string

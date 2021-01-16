@@ -2,4 +2,5 @@
 funcall
 hello
 print-register
+print-string
 string
