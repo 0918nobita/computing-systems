@@ -1,3 +1,5 @@
+funcall
+funcall.o
 hello
 hello.o
 print-register
