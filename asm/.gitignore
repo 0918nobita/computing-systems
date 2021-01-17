@@ -1,6 +1,9 @@
 *.o
+bad-addr
 funcall
 hello
+infinite-loop
+mmap
 print-register
 print-string
 string
