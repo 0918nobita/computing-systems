@@ -37,7 +37,7 @@ fn main() {
 
     match compile(&stmts) {
         Ok(asm) => {
-            fs::write("out.s", asm).expect("Failed to write output file");
+            fs::write("out.s", asm.stringify()).expect("Failed to write output file");
         }
         Err(msg) => {
             eprintln!("{}", msg);

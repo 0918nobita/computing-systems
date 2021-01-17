@@ -1,12 +1,56 @@
 use super::ast::{ExprAst, StmtAst};
 
-type Asm = String;
+struct DataSectionItem {
+    name: String,
+    size: String,
+    values: String,
+}
+
+struct DataSection {
+    items: Vec<DataSectionItem>,
+}
+
+enum TextSectionItem {
+    Label(String),
+    Instruction(String),
+}
+
+struct TextSection {
+    items: Vec<TextSectionItem>,
+}
+
+pub struct Asm {
+    data: DataSection,
+    text: TextSection,
+}
+
+impl Asm {
+    pub fn stringify(&self) -> String {
+        let mut result = String::from("bits 64\nglobal _start\n\nsection .data\n");
+        for item in self.data.items.iter() {
+            result.push_str(format!("    {} {} {}\n", item.name, item.size, item.values).as_str());
+        }
+        result.push_str("\nsection .text\n");
+        for item in self.text.items.iter() {
+            match item {
+                TextSectionItem::Label(label_name) => {
+                    result.push_str(format!("{}:\n", label_name).as_str());
+                }
+                TextSectionItem::Instruction(inst) => {
+                    result.push_str(format!("    {}\n", inst).as_str());
+                }
+            }
+        }
+        result
+    }
+}
 
 pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
-    let mut data_section = String::from("section .data\n");
-    let mut text_section = String::from("\nsection .text\n_start:\n");
+    let mut current_dat_index = 0;
+    let mut data_section_items = Vec::<DataSectionItem>::new();
+    let mut text_section_items = vec![TextSectionItem::Label(String::from("_start"))];
 
-    for (i, stmt) in stmts.into_iter().enumerate() {
+    for stmt in stmts.into_iter() {
         match stmt {
             StmtAst::CallProc(proc, args) if proc.name.eq("PRINT") => {
                 if args.len() > 1 {
@@ -15,12 +59,19 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                 if let Some(head) = args.first() {
                     match head {
                         ExprAst::StrLit(str_lit) => {
-                            data_section.push_str(
-                                format!("    dat{} db '{}', 10, 0\n", i, str_lit.value).as_str(),
-                            );
-                            text_section.push_str(
-                                format!("    mov rdi, dat{}\n    call printString\n", i).as_str(),
-                            );
+                            data_section_items.push(DataSectionItem {
+                                name: format!("dat{}", current_dat_index),
+                                size: String::from("db"),
+                                values: format!("'{}', 10, 0", str_lit.value),
+                            });
+                            text_section_items.push(TextSectionItem::Instruction(format!(
+                                "mov rdi, dat{}",
+                                current_dat_index
+                            )));
+                            text_section_items.push(TextSectionItem::Instruction(String::from(
+                                "call printString",
+                            )));
+                            current_dat_index += 1;
                         }
                     }
                 } else {
@@ -33,29 +84,42 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
         }
     }
 
-    text_section.push_str("    mov rax, 60\n"); // sys_exit
-    text_section.push_str("    xor rdi, rdi\n");
-    text_section.push_str("    syscall\n\n");
-    text_section.push_str("printString:\n");
-    text_section.push_str("    call stringLength\n");
-    text_section.push_str("    mov rdx, rax\n");
-    text_section.push_str("    mov rax, 1\n");
-    text_section.push_str("    mov rsi, rdi\n");
-    text_section.push_str("    mov rdi, 1\n");
-    text_section.push_str("    syscall\n");
-    text_section.push_str("    ret\n\n");
-    text_section.push_str("stringLength:\n");
-    text_section.push_str("    xor rax, rax\n");
-    text_section.push_str(".loop:\n");
-    text_section.push_str("    cmp byte[rdi+rax], 0\n");
-    text_section.push_str("    je .end\n");
-    text_section.push_str("    inc rax\n");
-    text_section.push_str("    jmp .loop\n");
-    text_section.push_str(".end:\n");
-    text_section.push_str("    ret\n");
+    // exit
+    text_section_items.push(TextSectionItem::Instruction(String::from("mov rax, 60")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("xor rdi, rdi")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("syscall")));
 
-    Ok(format!(
-        "bits 64\nglobal _start\n{}{}",
-        data_section, text_section
-    ))
+    // printString
+    text_section_items.push(TextSectionItem::Label(String::from("printString")));
+    text_section_items.push(TextSectionItem::Instruction(String::from(
+        "call stringLength",
+    )));
+    text_section_items.push(TextSectionItem::Instruction(String::from("mov rdx, rax")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("mov rax, 1")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("mov rsi, rdi")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("mov rdi, 1")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("syscall")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("ret")));
+
+    // stringLength
+    text_section_items.push(TextSectionItem::Label(String::from("stringLength")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("xor rax, rax")));
+    text_section_items.push(TextSectionItem::Label(String::from(".loop")));
+    text_section_items.push(TextSectionItem::Instruction(String::from(
+        "cmp byte[rdi+rax], 0",
+    )));
+    text_section_items.push(TextSectionItem::Instruction(String::from("je .end")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("inc rax")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("jmp .loop")));
+    text_section_items.push(TextSectionItem::Label(String::from(".end")));
+    text_section_items.push(TextSectionItem::Instruction(String::from("ret")));
+
+    Ok(Asm {
+        data: DataSection {
+            items: data_section_items,
+        },
+        text: TextSection {
+            items: text_section_items,
+        },
+    })
 }
