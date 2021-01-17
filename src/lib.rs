@@ -1,12 +1,13 @@
 use std::cell::RefCell;
+use serde::{Serialize};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize)]
 struct LocationEndpoint {
     line: i32,
     column: i32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize)]
 struct Location {
     start: LocationEndpoint,
     end: LocationEndpoint,
@@ -16,7 +17,7 @@ trait Locatable {
     fn locate(&self) -> Location;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Identifier {
     name: String,
     location: Location,
@@ -28,7 +29,7 @@ impl Locatable for Identifier {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct StringLiteral {
     value: String,
     location: Location,
@@ -41,36 +42,55 @@ impl Locatable for StringLiteral {
 }
 
 #[derive(Debug)]
-pub enum Token {
-    Ident(Identifier),
-    StrLit(StringLiteral),
+pub struct Comma {
+    loc: LocationEndpoint,
+}
+
+impl Locatable for Comma {
+    fn locate(&self) -> Location {
+        Location { start: self.loc, end: self.loc }
+    }
 }
 
 #[derive(Debug)]
+pub enum Token {
+    Ident(Identifier),
+    StrLit(StringLiteral),
+    Comma(Comma),
+}
+
+#[derive(Debug, Serialize)]
 pub enum ExprAst {
     StrLit(StringLiteral),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum StmtAst {
     CallProc(Identifier, Vec<ExprAst>),
+}
+
+#[derive(PartialEq, Eq)]
+enum TokenizerState {
+    Ready,
+    Identifier,
+    StringLiteral,
 }
 
 pub fn tokenize(line: String, line_number: i32) -> Result<Vec<Token>, String> {
     let mut tokens = Vec::new();
 
-    let mut is_keyword = false;
-    let mut keyword_start: i32 = 0;
-    let mut keyword_acc = String::new();
+    let mut state = TokenizerState::Ready;
 
-    let mut is_str_lit = false;
+    let mut ident_start: i32 = 0;
+    let mut ident_acc = String::new();
+
     let mut str_lit_start = 0;
     let str_lit = RefCell::new(String::new());
 
     for (i, c) in line.chars().enumerate() {
-        if is_str_lit {
+        if state == TokenizerState::StringLiteral {
             if c == '"' {
-                is_str_lit = false;
+                state = TokenizerState::Ready;
                 let location = Location {
                     start: LocationEndpoint {
                         line: line_number,
@@ -94,11 +114,11 @@ pub fn tokenize(line: String, line_number: i32) -> Result<Vec<Token>, String> {
         }
 
         if c.is_whitespace() {
-            if !keyword_acc.is_empty() {
+            if !ident_acc.is_empty() {
                 let location = Location {
                     start: LocationEndpoint {
                         line: line_number,
-                        column: keyword_start,
+                        column: ident_start,
                     },
                     end: LocationEndpoint {
                         line: line_number,
@@ -106,29 +126,44 @@ pub fn tokenize(line: String, line_number: i32) -> Result<Vec<Token>, String> {
                     },
                 };
                 tokens.push(Token::Ident(Identifier {
-                    name: keyword_acc.clone(),
+                    name: ident_acc.clone(),
                     location,
                 }));
-                keyword_acc.clear();
-                is_keyword = false;
+                ident_acc.clear();
+                state = TokenizerState::Ready;
             }
         } else if c == '"' {
-            is_str_lit = true;
+            state = TokenizerState::StringLiteral;
             str_lit_start = i as i32;
-        } else if !is_keyword {
-            is_keyword = true;
-            keyword_start = i as i32;
-            keyword_acc.push(c);
+        } else if c == ',' {
+            if state == TokenizerState::Identifier {
+                let location = Location {
+                    start: LocationEndpoint {
+                        line: line_number,
+                        column: ident_start,
+                    },
+                    end: LocationEndpoint {
+                        line: line_number,
+                        column: i as i32 - 1,
+                    },
+                };
+                tokens.push(Token::Ident(Identifier { name: ident_acc.clone(), location }));
+            }
+            tokens.push(Token::Comma(Comma { loc: LocationEndpoint { line: line_number, column: i as i32 } }));
+        } else if state != TokenizerState::Identifier {
+            state = TokenizerState::Identifier;
+            ident_start = i as i32;
+            ident_acc.push(c);
         } else {
-            keyword_acc.push(c);
+            ident_acc.push(c);
         }
     }
 
-    if !keyword_acc.is_empty() {
+    if !ident_acc.is_empty() {
         let location = Location {
             start: LocationEndpoint {
                 line: line_number,
-                column: keyword_start,
+                column: ident_start,
             },
             end: LocationEndpoint {
                 line: line_number,
@@ -136,25 +171,25 @@ pub fn tokenize(line: String, line_number: i32) -> Result<Vec<Token>, String> {
             },
         };
         tokens.push(Token::Ident(Identifier {
-            name: keyword_acc.clone(),
+            name: ident_acc.clone(),
             location,
         }))
     }
 
-    if is_str_lit {
+    if state == TokenizerState::StringLiteral {
         Err(String::from("Syntax error: Expected end of string literal"))
     } else {
         Ok(tokens)
     }
 }
 
-pub fn parse(tokens: Vec<Token>) -> Result<StmtAst, String> {
+pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
     if let Some(head) = tokens.first() {
         match head {
             Token::Ident(ident) => {
-                let (expr_ast, rest) = parse_expr(&tokens[1..])?;
+                let (args, rest) = parse_argument_list(&tokens[1..])?;
                 if rest.is_empty() {
-                    Ok(StmtAst::CallProc(ident.clone(), vec![expr_ast]))
+                    Ok(StmtAst::CallProc(ident.clone(), args))
                 } else {
                     Err(format!("Syntax error: Unexpected tokens\n  {:?}", rest))
                 }
@@ -164,6 +199,29 @@ pub fn parse(tokens: Vec<Token>) -> Result<StmtAst, String> {
     } else {
         Err(String::from("Syntax error: No tokens found"))
     }
+}
+
+pub fn parse_argument_list(tokens: &[Token]) -> Result<(Vec<ExprAst>, &[Token]), String> {
+    let mut args = Vec::<ExprAst>::new();
+    let (first_arg, mut remaining_tokens) = parse_expr(tokens)?;
+    args.push(first_arg);
+    loop {
+        if let Some(Token::Comma { .. }) = remaining_tokens.first() {
+            remaining_tokens = &remaining_tokens[1..];
+        } else {
+            break;
+        }
+        match parse_expr(remaining_tokens) {
+            Ok((arg, rest)) => {
+                args.push(arg);
+                remaining_tokens = rest;
+            },
+            Err(_) => {
+                break;
+            },
+        }
+    }
+    Ok((args, remaining_tokens))
 }
 
 pub fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {

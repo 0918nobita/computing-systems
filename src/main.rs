@@ -2,6 +2,7 @@ extern crate basic;
 
 use basic::{compile, parse, tokenize};
 use std::{fs, process};
+use serde_json;
 
 fn main() {
     let content = fs::read_to_string("./basic/hello.bas").expect("Failed to load source file");
@@ -15,7 +16,7 @@ fn main() {
                     continue;
                 }
 
-                match parse(tokens) {
+                match parse(&tokens) {
                     Ok(stmt) => {
                         stmts.push(stmt);
                     }
@@ -32,8 +33,12 @@ fn main() {
         }
     }
 
+    println!("{}", serde_json::to_string_pretty(&stmts).unwrap());
+
     match compile(&stmts) {
-        Ok(asm) => print!("{}", asm),
+        Ok(asm) => {
+            fs::write("out.s", asm).expect("Failed to write output file");
+        },
         Err(msg) => {
             eprintln!("{}", msg);
             process::exit(1);
