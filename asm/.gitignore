@@ -8,3 +8,4 @@ mmap
 print-register
 print-string
 string
+variable

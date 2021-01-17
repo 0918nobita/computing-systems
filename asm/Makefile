@@ -1,6 +1,6 @@
 NASM = nasm -f elf64
 
-all: hello print-register funcall string print-string infinite-loop bad-addr mmap dyn-str
+all: hello print-register funcall string print-string infinite-loop bad-addr mmap dyn-str variable
 
 hello: hello.o
 	ld -o hello hello.o
@@ -56,7 +56,13 @@ dyn-str: dyn-str.o
 dyn-str.o: dyn-str.s
 	$(NASM) dyn-str.s
 
+variable: variable.o
+	ld -o variable variable.o
+
+variable.o: variable.s
+	$(NASM) variable.s
+
 .PHONY: clean
 clean:
 	rm -f *.o
-	rm -f hello print-register funcall string print-string infinite-loop bad-addr mmap dyn-str
+	rm -f hello print-register funcall string print-string infinite-loop bad-addr mmap dyn-str variable
