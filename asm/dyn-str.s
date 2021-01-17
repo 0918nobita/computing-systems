@@ -7,6 +7,7 @@ _start:
     xor rdi, rdi
     syscall
 
+    push rax
     mov rdi, rax
     add rdi, 5
     mov rax, 12  ; sys_brk
@@ -19,6 +20,10 @@ _start:
     mov byte[rax+4], 0x00
     mov rdi, rax
     call printString
+
+    mov rax, 12  ; sys_brk
+    pop rdi
+    syscall
 
     mov rax, 60  ; sys_exit
     xor rdi, rdi
