@@ -1,5 +1,6 @@
 *.o
 bad-addr
+dyn-str
 funcall
 hello
 infinite-loop
