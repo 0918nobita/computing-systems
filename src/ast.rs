@@ -55,10 +55,25 @@ impl Locatable for Comma {
 }
 
 #[derive(Debug)]
+pub struct Equal {
+    pub loc: LocationEndpoint,
+}
+
+impl Locatable for Equal {
+    fn locate(&self) -> Location {
+        Location {
+            start: self.loc,
+            end: self.loc,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum Token {
     Ident(Identifier),
     StrLit(StringLiteral),
     Comma(Comma),
+    Equal(Equal),
 }
 
 #[derive(Debug, Serialize)]

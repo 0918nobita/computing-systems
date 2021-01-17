@@ -1,4 +1,4 @@
-use super::ast::{Comma, Identifier, Location, LocationEndpoint, StringLiteral, Token};
+use super::ast::{Comma, Equal, Identifier, Location, LocationEndpoint, StringLiteral, Token};
 use std::cell::RefCell;
 
 #[derive(PartialEq, Eq)]
@@ -85,6 +85,29 @@ pub fn tokenize(line: String, line_number: i32) -> Result<Vec<Token>, String> {
                 }));
             }
             tokens.push(Token::Comma(Comma {
+                loc: LocationEndpoint {
+                    line: line_number,
+                    column: i as i32,
+                },
+            }));
+        } else if c == '=' {
+            if state == TokenizerState::Identifier {
+                let location = Location {
+                    start: LocationEndpoint {
+                        line: line_number,
+                        column: ident_start,
+                    },
+                    end: LocationEndpoint {
+                        line: line_number,
+                        column: i as i32 - 1,
+                    },
+                };
+                tokens.push(Token::Ident(Identifier {
+                    name: ident_acc.clone(),
+                    location,
+                }));
+            }
+            tokens.push(Token::Equal(Equal {
                 loc: LocationEndpoint {
                     line: line_number,
                     column: i as i32,
