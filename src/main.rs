@@ -2,10 +2,12 @@ extern crate basic;
 
 use basic::{compiler::compile, parser::parse, tokenizer::tokenize};
 use serde_json;
-use std::{fs, process};
+use std::{env, fs, process};
 
 fn main() {
-    let content = fs::read_to_string("./basic/hello.bas").expect("Failed to load source file");
+    let args: Vec<String> = env::args().collect();
+    let filename = args.get(1).expect("Please specify a source file");
+    let content = fs::read_to_string(filename).expect("Failed to load the source file");
 
     let mut stmts = Vec::new();
 
