@@ -5,7 +5,7 @@
 Supported arch: x86_64
 
 ```bash
-cargo run > out.s
+cargo run
 nasm -f elf64 out.s
 ld -o out out.o
 ./out
