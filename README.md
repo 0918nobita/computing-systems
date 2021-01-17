@@ -2,7 +2,7 @@
 
 (WIP) Language implementation in Rust
 
-Supported arch: x86_64
+Target: x86_64 Linux
 
 ```bash
 cargo run -- ./basic/hello.bas
