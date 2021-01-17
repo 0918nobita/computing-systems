@@ -3,6 +3,22 @@ use super::ast::{ExprAst, StmtAst, Token};
 pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
     if let Some(head) = tokens.first() {
         match head {
+            Token::Ident(ident) if ident.name == "LET" => {
+                if let Some(Token::Ident(var_ident)) = tokens.get(1) {
+                    if let Some(Token::Equal(_)) = tokens.get(2) {
+                        let (expr, rest) = parse_expr(&tokens[3..])?;
+                        if rest.is_empty() {
+                            Ok(StmtAst::VarDecl(var_ident.clone(), expr))
+                        } else {
+                            Err(format!("Unexpected tokens\n  {:?}", rest))
+                        }
+                    } else {
+                        Err(String::from("Syntax error: Expected equal"))
+                    }
+                } else {
+                    Err(String::from("Syntax error: Expected identifier"))
+                }
+            }
             Token::Ident(ident) => {
                 let (args, rest) = parse_argument_list(&tokens[1..])?;
                 if rest.is_empty() {
@@ -48,6 +64,6 @@ pub fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
             _ => Err(format!("Syntax error: Expected expression\n  {:?}", head)),
         }
     } else {
-        Err(String::from("Syntax error: Unexpected end of statement"))
+        Err(String::from("Syntax error: Unexpected end of line"))
     }
 }
