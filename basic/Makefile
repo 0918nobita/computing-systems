@@ -1,3 +1,3 @@
 .PHONY: clean
 clean:
-	rm -f *.bin *.o *.s
+	rm -f *.ast.json *.bin *.o *.s

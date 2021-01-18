@@ -11,17 +11,25 @@ use std::{
 fn main() {
     let args: Vec<String> = env::args().collect();
     let first_arg = args.get(1).expect("Please specify a source file");
+
     let src_path = Path::new(first_arg);
     let src_dir = src_path.parent().expect("Failed to get directory info");
     let src_filename = src_path
         .file_name()
         .expect("Failed to get name of the source file");
+
+    let out_ast_path = src_dir.join(src_filename).with_extension("ast.json");
+    let out_ast_path = out_ast_path.to_str().unwrap();
+
     let out_asm_path = src_dir.join(src_filename).with_extension("s");
     let out_asm_path = out_asm_path.to_str().unwrap();
+
     let out_obj_path = src_dir.join(src_filename).with_extension("o");
     let out_obj_path = out_obj_path.to_str().unwrap();
+
     let out_bin_path = src_dir.join(src_filename).with_extension("bin");
     let out_bin_path = out_bin_path.to_str().unwrap();
+
     let content = fs::read_to_string(src_path).expect("Failed to load the source file");
 
     let mut stmts = Vec::new();
@@ -50,7 +58,11 @@ fn main() {
         }
     }
 
-    println!("{}", serde_json::to_string_pretty(&stmts).unwrap());
+    fs::write(
+        out_ast_path,
+        serde_json::to_string_pretty(&stmts).unwrap() + "\n",
+    )
+    .expect("Failed to write .ast.json file");
 
     match compile(&stmts) {
         Ok(asm) => {
