@@ -22,7 +22,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
         match stmt {
             StmtAst::ProcCall(proc, args) if proc.name == "PRINT" => {
                 if args.len() > 1 {
-                    return Err(String::from("Failed to compile: Too many arguments"));
+                    return Err(format!("Compile error: ({}) Too many arguments", proc.locate()));
                 }
                 if let Some(head) = args.first() {
                     compile_expr(head, &mut context, &mut dat_items, &mut txt_items)?;
@@ -31,8 +31,11 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                         "call printString",
                     )));
                 } else {
-                    return Err(String::from("Failed to compile: Too few arguments"));
+                    return Err(format!("Compile error: ({}) Too few arguments", proc.locate()));
                 }
+            }
+            StmtAst::ProcCall(proc, _) => {
+                return Err(format!("Compile error: ({}) Unknown procedure `{}`", proc.locate(), proc.name))
             }
             StmtAst::VarDecl(var, init_expr) => {
                 compile_expr(init_expr, &mut context, &mut dat_items, &mut txt_items)?;
@@ -47,9 +50,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                     .insert(var.name.clone(), context.current_var_index);
                 context.current_var_index += 1;
             }
-            _ => {
-                return Err(String::from("Failed to compile: Unknown procedure"));
-            }
+            _ => return Err(String::from("Compile error: Not implemented")),
         }
     }
 
