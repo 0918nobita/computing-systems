@@ -1,2 +1,9 @@
-PRINT MSG
-PRINT MSG
+VAR FOO = " from BASIC"
+VAR BAR = "Hello"
+
+PRINT BAR
+
+VAR BAZ = "!"
+
+PRINT FOO
+PRINT BAZ
