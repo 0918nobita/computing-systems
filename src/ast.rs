@@ -18,7 +18,10 @@ impl fmt::Display for Location {
         write!(
             f,
             "{}:{}-{}:{}",
-            self.start.line, self.start.column, self.end.line, self.end.column
+            self.start.line + 1,
+            self.start.column + 1,
+            self.end.line + 1,
+            self.end.column + 1
         )
     }
 }
@@ -96,5 +99,6 @@ pub enum ExprAst {
 #[derive(Debug, Serialize)]
 pub enum StmtAst {
     VarDecl(Identifier, ExprAst),
+    VarAssign(Identifier, ExprAst),
     ProcCall(Identifier, Vec<ExprAst>),
 }
