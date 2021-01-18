@@ -4,13 +4,25 @@ use basic::{compiler::compile, parser::parse, tokenizer::tokenize};
 use serde_json;
 use std::{
     env, fs,
+    path::Path,
     process::{self, Command},
 };
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let filename = args.get(1).expect("Please specify a source file");
-    let content = fs::read_to_string(filename).expect("Failed to load the source file");
+    let first_arg = args.get(1).expect("Please specify a source file");
+    let src_path = Path::new(first_arg);
+    let src_dir = src_path.parent().expect("Failed to get directory info");
+    let src_filename = src_path
+        .file_name()
+        .expect("Failed to get name of the source file");
+    let out_asm_path = src_dir.join(src_filename).with_extension("s");
+    let out_asm_path = out_asm_path.to_str().unwrap();
+    let out_obj_path = src_dir.join(src_filename).with_extension("o");
+    let out_obj_path = out_obj_path.to_str().unwrap();
+    let out_bin_path = src_dir.join(src_filename).with_extension("bin");
+    let out_bin_path = out_bin_path.to_str().unwrap();
+    let content = fs::read_to_string(src_path).expect("Failed to load the source file");
 
     let mut stmts = Vec::new();
 
@@ -42,7 +54,7 @@ fn main() {
 
     match compile(&stmts) {
         Ok(asm) => {
-            fs::write("out.s", asm.stringify()).expect("Failed to write output file");
+            fs::write(out_asm_path, asm.stringify()).expect("Failed to write output file");
         }
         Err(msg) => {
             eprintln!("{}", msg);
@@ -51,12 +63,12 @@ fn main() {
     }
 
     Command::new("nasm")
-        .args(&["-f", "elf64", "out.s"])
+        .args(&["-f", "elf64", out_asm_path])
         .output()
         .expect("Failed to execute `nasm`");
 
     Command::new("ld")
-        .args(&["-o", "out.bin", "out.o"])
+        .args(&["-o", out_bin_path, out_obj_path])
         .output()
         .expect("Failed to execute `ld`");
 }
