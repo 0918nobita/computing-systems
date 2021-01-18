@@ -4,7 +4,7 @@ use basic::{ast::StmtAst, compiler::compile, parser::parse, tokenizer::tokenize}
 use serde_json;
 use std::{
     env, fs,
-    path::Path,
+    path::PathBuf,
     process::{self, Command},
 };
 
@@ -38,55 +38,62 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let asm = compile(&stmts)?;
     fs::write(&output_info.asm_path, asm.stringify())?;
 
-    Command::new("nasm")
-        .args(&["-f", "elf64", &output_info.asm_path])
-        .output()?;
+    let status = Command::new("nasm")
+        .args(&["-f", "elf64", output_info.asm_path.to_str().unwrap()])
+        .status()?;
+    if !status.success() {
+        eprintln!("Error occurs while executing `nasm`");
+        process::exit(1);
+    }
 
-    Command::new("ld")
-        .args(&["-o", &output_info.bin_path, &output_info.obj_path])
-        .output()?;
+    let status = Command::new("ld")
+        .args(&[
+            "-o",
+            output_info.bin_path.to_str().unwrap(),
+            output_info.obj_path.to_str().unwrap(),
+        ])
+        .status()?;
+    if !status.success() {
+        eprintln!("Error occurs while executing `ld`");
+        process::exit(1);
+    }
+
     Ok(())
 }
 
 struct InputInfo {
-    src_path: String,
+    src_path: PathBuf,
 }
 
 struct OutputInfo {
-    ast_path: String,
-    asm_path: String,
-    obj_path: String,
-    bin_path: String,
+    ast_path: PathBuf,
+    asm_path: PathBuf,
+    obj_path: PathBuf,
+    bin_path: PathBuf,
 }
 
-fn get_io_info(src_filename: &str) -> Result<(InputInfo, OutputInfo), String> {
-    let src_path = Path::new(src_filename);
-    let src_dir = src_path.parent().expect("Failed to get directory info");
+fn get_io_info(filename: &str) -> Result<(InputInfo, OutputInfo), String> {
+    let src_path = PathBuf::from(filename);
+    let src_dir = src_path.parent().ok_or("Failed to get directory info")?;
+    let mut src_dir = src_dir.to_path_buf();
     let src_filename = src_path
         .file_name()
         .ok_or("Failed to get name of the source file")?;
 
-    let ast_path = src_dir.join(src_filename).with_extension("ast.json");
-    let ast_path = ast_path.to_str().unwrap();
+    src_dir.push(src_filename);
 
-    let asm_path = src_dir.join(src_filename).with_extension("s");
-    let asm_path = asm_path.to_str().unwrap();
+    let ast_path = src_dir.with_extension("ast.json");
+    let asm_path = src_dir.with_extension("s");
+    let obj_path = src_dir.with_extension("o");
+    let bin_path = src_dir.with_extension("bin");
 
-    let obj_path = src_dir.join(src_filename).with_extension("o");
-    let obj_path = obj_path.to_str().unwrap();
-
-    let bin_path = src_dir.join(src_filename).with_extension("bin");
-    let bin_path = bin_path.to_str().unwrap();
-
-    let input_info = InputInfo {
-        src_path: String::from(src_path.to_str().unwrap()),
-    };
+    let input_info = InputInfo { src_path };
 
     let output_info = OutputInfo {
-        ast_path: String::from(ast_path),
-        asm_path: String::from(asm_path),
-        obj_path: String::from(obj_path),
-        bin_path: String::from(bin_path),
+        ast_path,
+        asm_path,
+        obj_path,
+        bin_path,
     };
 
     Ok((input_info, output_info))

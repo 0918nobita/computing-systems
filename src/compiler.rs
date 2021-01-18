@@ -64,17 +64,17 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
         }
     }
 
-    if context.current_var_index >= 1 {
-        let mut new_txt_items = Vec::<TextSectionItem>::new();
-        new_txt_items.push(TextSectionItem::Label(String::from("_start")));
-        new_txt_items.push(TextSectionItem::Instruction(format!(
-            "sub rsp, {}",
-            context.current_var_index * 8
-        )));
-        new_txt_items.push(TextSectionItem::Instruction(String::from("mov rbp, rsp")));
-        new_txt_items.extend(txt_items);
-        txt_items = new_txt_items;
-    }
+    let mut new_txt_items = Vec::<TextSectionItem>::new();
+    new_txt_items.push(TextSectionItem::Label(String::from("_start")));
+    new_txt_items.push(TextSectionItem::Instruction(format!(
+        "sub rsp, {}",
+        context.current_var_index * 8
+    )));
+    new_txt_items.push(TextSectionItem::Instruction(String::from("mov rbp, rsp")));
+    new_txt_items.extend(txt_items);
+    txt_items = new_txt_items;
+
+    txt_items.push(TextSectionItem::Instruction(format!("add rsp, {}", context.current_var_index * 8)));
 
     // exit
     txt_items.push(TextSectionItem::Instruction(String::from("mov rax, 60")));
