@@ -1,5 +1,5 @@
-main: main.o print-int.o
-	gcc -no-pie -o main main.o print-int.o
+main.bin: main.o print-int.o
+	gcc -no-pie -o main.bin main.o print-int.o
 
 main.o: main.c
 	gcc -c main.c
@@ -9,4 +9,4 @@ print-int.o: print-int.s
 
 .PHONY: clean
 clean:
-	rm -f main main.o print-int.o
+	rm -f *.bin *.o

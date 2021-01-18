@@ -1,5 +1,5 @@
-main: main.o string-length.o
-	gcc -o main main.o string-length.o
+main.bin: main.o string-length.o
+	gcc -o main.bin main.o string-length.o
 
 main.o: main.c
 	gcc -c main.c
@@ -9,4 +9,4 @@ string-length.o: string-length.s
 
 .PHONY: clean
 clean:
-	rm -f main main.o string-length.o
+	rm -f *.bin *.o

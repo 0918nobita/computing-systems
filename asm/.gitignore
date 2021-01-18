@@ -1,11 +1,2 @@
 *.o
-bad-addr
-dyn-str
-funcall
-hello
-infinite-loop
-mmap
-print-register
-print-string
-string
-variable
+*.bin
