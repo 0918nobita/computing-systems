@@ -1,9 +1,7 @@
-VAR FOO = " from BASIC"
-VAR BAR = "Hello"
-
-PRINT BAR
-
-VAR BAZ = "!"
-
+VAR FOO = "Hello from BASIC"
 PRINT FOO
+
+VAR BAR = "!"
+VAR BAZ = BAR
+
 PRINT BAZ
