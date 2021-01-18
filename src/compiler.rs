@@ -8,7 +8,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
 
     for stmt in stmts.into_iter() {
         match stmt {
-            StmtAst::CallProc(proc, args) if proc.name == "PRINT" => {
+            StmtAst::ProcCall(proc, args) if proc.name == "PRINT" => {
                 if args.len() > 1 {
                     return Err(String::from("Failed to compile: Too many arguments"));
                 }

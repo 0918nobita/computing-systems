@@ -84,5 +84,5 @@ pub enum ExprAst {
 #[derive(Debug, Serialize)]
 pub enum StmtAst {
     VarDecl(Identifier, ExprAst),
-    CallProc(Identifier, Vec<ExprAst>),
+    ProcCall(Identifier, Vec<ExprAst>),
 }

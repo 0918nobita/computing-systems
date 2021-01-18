@@ -22,7 +22,7 @@ pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
             Token::Ident(ident) => {
                 let (args, rest) = parse_argument_list(&tokens[1..])?;
                 if rest.is_empty() {
-                    Ok(StmtAst::CallProc(ident.clone(), args))
+                    Ok(StmtAst::ProcCall(ident.clone(), args))
                 } else {
                     Err(format!("Syntax error: Unexpected tokens\n  {:?}", rest))
                 }
