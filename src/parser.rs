@@ -1,9 +1,9 @@
-use super::ast::{ExprAst, StmtAst, Token};
+use super::ast::{ExprAst, Identifier, StmtAst, Token};
 
 pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
     if let Some(head) = tokens.first() {
         match head {
-            Token::Ident(ident) if ident.name == "LET" => {
+            Token::Ident(ident) if ident.name == "VAR" => {
                 if let Some(Token::Ident(var_ident)) = tokens.get(1) {
                     if let Some(Token::Equal(_)) = tokens.get(2) {
                         let (expr, rest) = parse_expr(&tokens[3..])?;
@@ -20,9 +20,9 @@ pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
                 }
             }
             Token::Ident(ident) => {
-                let (args, rest) = parse_argument_list(&tokens[1..])?;
+                let (ast, rest) = parse_proc_call(ident, tokens)?;
                 if rest.is_empty() {
-                    Ok(StmtAst::ProcCall(ident.clone(), args))
+                    Ok(ast)
                 } else {
                     Err(format!("Syntax error: Unexpected tokens\n  {:?}", rest))
                 }
@@ -34,7 +34,15 @@ pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
     }
 }
 
-pub fn parse_argument_list(tokens: &[Token]) -> Result<(Vec<ExprAst>, &[Token]), String> {
+fn parse_proc_call<'a>(
+    ident: &Identifier,
+    tokens: &'a [Token],
+) -> Result<(StmtAst, &'a [Token]), String> {
+    let (args, rest) = parse_argument_list(&tokens[1..])?;
+    Ok((StmtAst::ProcCall((*ident).clone(), args), rest))
+}
+
+fn parse_argument_list(tokens: &[Token]) -> Result<(Vec<ExprAst>, &[Token]), String> {
     let mut args = Vec::<ExprAst>::new();
     let (first_arg, mut remaining_tokens) = parse_expr(tokens)?;
     args.push(first_arg);
@@ -57,7 +65,7 @@ pub fn parse_argument_list(tokens: &[Token]) -> Result<(Vec<ExprAst>, &[Token]),
     Ok((args, remaining_tokens))
 }
 
-pub fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
+fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
     if let Some(head) = tokens.first() {
         match head {
             Token::StrLit(str_lit) => Ok((ExprAst::StrLit(str_lit.clone()), &tokens[1..])),
