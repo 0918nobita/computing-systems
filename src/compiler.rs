@@ -22,7 +22,10 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
         match stmt {
             StmtAst::ProcCall(proc, args) if proc.name == "PRINT" => {
                 if args.len() > 1 {
-                    return Err(format!("Compile error: ({}) Too many arguments", proc.locate()));
+                    return Err(format!(
+                        "Compile error: ({}) Too many arguments",
+                        proc.locate()
+                    ));
                 }
                 if let Some(head) = args.first() {
                     compile_expr(head, &mut context, &mut dat_items, &mut txt_items)?;
@@ -31,11 +34,18 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                         "call printString",
                     )));
                 } else {
-                    return Err(format!("Compile error: ({}) Too few arguments", proc.locate()));
+                    return Err(format!(
+                        "Compile error: ({}) Too few arguments",
+                        proc.locate()
+                    ));
                 }
             }
             StmtAst::ProcCall(proc, _) => {
-                return Err(format!("Compile error: ({}) Unknown procedure `{}`", proc.locate(), proc.name))
+                return Err(format!(
+                    "Compile error: ({}) Unknown procedure `{}`",
+                    proc.locate(),
+                    proc.name
+                ))
             }
             StmtAst::VarDecl(var, init_expr) => {
                 compile_expr(init_expr, &mut context, &mut dat_items, &mut txt_items)?;

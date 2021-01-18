@@ -1,34 +1,49 @@
-use super::ast::{ExprAst, Identifier, StmtAst, Token};
+use super::ast::{ExprAst, Identifier, Locatable, StmtAst, Token};
 
 pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
     if let Some(head) = tokens.first() {
         match head {
-            Token::Ident(ident) if ident.name == "VAR" => {
-                if let Some(Token::Ident(var_ident)) = tokens.get(1) {
-                    if let Some(Token::Equal(_)) = tokens.get(2) {
+            Token::Ident(ident) if ident.name == "VAR" => match tokens.get(1) {
+                Some(Token::Ident(var_ident)) => match tokens.get(2) {
+                    Some(Token::Equal(_)) => {
                         let (expr, rest) = parse_expr(&tokens[3..])?;
                         if rest.is_empty() {
                             Ok(StmtAst::VarDecl(var_ident.clone(), expr))
                         } else {
-                            Err(format!("Unexpected tokens\n  {:?}", rest))
+                            Err(format!(
+                                "Syntax error: ({}) Unexpected token",
+                                rest[0].locate()
+                            ))
                         }
-                    } else {
-                        Err(String::from("Syntax error: Expected equal"))
                     }
-                } else {
-                    Err(String::from("Syntax error: Expected identifier"))
-                }
-            }
+                    Some(token) => Err(format!("Syntax error: ({}) Expected `=`", token.locate())),
+                    None => Err(format!(
+                        "Syntax error: ({}) Unexpected end of line",
+                        var_ident.locate().end
+                    )),
+                },
+                Some(token) => Err(format!(
+                    "Syntax error: ({}) Unexpected token",
+                    token.locate()
+                )),
+                None => Err(format!(
+                    "Syntax error: ({}) Unexpected end of line",
+                    ident.locate().end
+                )),
+            },
             Token::Ident(ident) => {
                 // 先頭のトークンが識別子なら、代入文と手続き呼び出しの2通りが想定される
                 let (ast, rest) = parse_proc_call(ident, tokens)?;
                 if rest.is_empty() {
                     Ok(ast)
                 } else {
-                    Err(format!("Syntax error: Unexpected tokens\n  {:?}", rest))
+                    Err(format!("Syntax error: ({}) Unexpected token", rest[0].locate()))
                 }
             }
-            _ => Err(String::from("Syntax error: Expected identifier")),
+            _ => Err(format!(
+                "Syntax error: ({}) Expected identifier",
+                head.locate()
+            )),
         }
     } else {
         Err(String::from("Syntax error: No tokens found"))
@@ -71,7 +86,7 @@ fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
         match head {
             Token::StrLit(str_lit) => Ok((ExprAst::StrLit(str_lit.clone()), &tokens[1..])),
             Token::Ident(ident) => Ok((ExprAst::Ident(ident.clone()), &tokens[1..])),
-            _ => Err(format!("Syntax error: Expected expression\n  {:?}", head)),
+            _ => Err(format!("Syntax error: ({}) Expected expression", head.locate())),
         }
     } else {
         Err(String::from("Syntax error: Unexpected end of line"))

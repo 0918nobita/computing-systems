@@ -7,6 +7,12 @@ pub struct LocationEndpoint {
     pub column: i32,
 }
 
+impl fmt::Display for LocationEndpoint {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}:{}", self.line + 1, self.column + 1)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Serialize)]
 pub struct Location {
     pub start: LocationEndpoint,
@@ -88,6 +94,17 @@ pub enum Token {
     StrLit(StringLiteral),
     Comma(Comma),
     Equal(Equal),
+}
+
+impl Locatable for Token {
+    fn locate(&self) -> Location {
+        match self {
+            Token::Ident(ident) => ident.locate(),
+            Token::StrLit(str_lit) => str_lit.locate(),
+            Token::Comma(comma) => comma.locate(),
+            Token::Equal(equal) => equal.locate(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]
