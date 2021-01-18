@@ -2,7 +2,11 @@ extern crate basic;
 
 use basic::{ast::StmtAst, compiler::compile, parser::parse, tokenizer::tokenize};
 use serde_json;
-use std::{env, fs, path::Path, process::Command};
+use std::{
+    env, fs,
+    path::Path,
+    process::{self, Command},
+};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
@@ -17,8 +21,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if tokens.is_empty() {
             continue;
         }
-        let stmt = parse(&tokens)?;
-        stmts.push(stmt);
+        match parse(&tokens) {
+            Ok(stmt) => stmts.push(stmt),
+            Err(msg) => {
+                eprintln!("{}", msg);
+                process::exit(1);
+            }
+        }
     }
 
     fs::write(

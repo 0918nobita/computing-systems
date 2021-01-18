@@ -1,4 +1,7 @@
 use super::ast::{ExprAst, Identifier, Locatable, StmtAst, Token};
+use once_cell::sync::Lazy;
+
+static SYNTAX_ERROR: Lazy<String> = Lazy::new(|| red_bold("Syntax error:"));
 
 pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
     if let Some(head) = tokens.first() {
@@ -11,23 +14,31 @@ pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
                             Ok(StmtAst::VarDecl(var_ident.clone(), expr))
                         } else {
                             Err(format!(
-                                "Syntax error: ({}) Unexpected token",
+                                "{} ({}) Unexpected token",
+                                SYNTAX_ERROR.as_str(),
                                 rest[0].locate()
                             ))
                         }
                     }
-                    Some(token) => Err(format!("Syntax error: ({}) Expected `=`", token.locate())),
+                    Some(token) => Err(format!(
+                        "{} ({}) Expected `=`",
+                        SYNTAX_ERROR.as_str(),
+                        token.locate()
+                    )),
                     None => Err(format!(
-                        "Syntax error: ({}) Unexpected end of line",
+                        "{} ({}) Unexpected end of line",
+                        SYNTAX_ERROR.as_str(),
                         var_ident.locate().end
                     )),
                 },
                 Some(token) => Err(format!(
-                    "Syntax error: ({}) Unexpected token",
+                    "{} ({}) Unexpected token",
+                    SYNTAX_ERROR.as_str(),
                     token.locate()
                 )),
                 None => Err(format!(
-                    "Syntax error: ({}) Unexpected end of line",
+                    "{} ({}) Unexpected end of line",
+                    SYNTAX_ERROR.as_str(),
                     ident.locate().end
                 )),
             },
@@ -37,16 +48,21 @@ pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
                 if rest.is_empty() {
                     Ok(ast)
                 } else {
-                    Err(format!("Syntax error: ({}) Unexpected token", rest[0].locate()))
+                    Err(format!(
+                        "{} ({}) Unexpected token",
+                        SYNTAX_ERROR.as_str(),
+                        rest[0].locate()
+                    ))
                 }
             }
             _ => Err(format!(
-                "Syntax error: ({}) Expected identifier",
+                "{} ({}) Expected identifier",
+                SYNTAX_ERROR.as_str(),
                 head.locate()
             )),
         }
     } else {
-        Err(String::from("Syntax error: No tokens found"))
+        Err(format!("{} No tokens found", SYNTAX_ERROR.as_str()))
     }
 }
 
@@ -86,9 +102,17 @@ fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
         match head {
             Token::StrLit(str_lit) => Ok((ExprAst::StrLit(str_lit.clone()), &tokens[1..])),
             Token::Ident(ident) => Ok((ExprAst::Ident(ident.clone()), &tokens[1..])),
-            _ => Err(format!("Syntax error: ({}) Expected expression", head.locate())),
+            _ => Err(format!(
+                "{} ({}) Expected expression",
+                SYNTAX_ERROR.as_str(),
+                head.locate()
+            )),
         }
     } else {
-        Err(String::from("Syntax error: Unexpected end of line"))
+        Err(format!("{} Unexpected end of line", SYNTAX_ERROR.as_str()))
     }
+}
+
+fn red_bold(text: &str) -> String {
+    format!("\x1b[31m\x1b[1m{}\x1b[m", text)
 }
