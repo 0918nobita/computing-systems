@@ -20,6 +20,7 @@ pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
                 }
             }
             Token::Ident(ident) => {
+                // 先頭のトークンが識別子なら、代入文と手続き呼び出しの2通りが想定される
                 let (ast, rest) = parse_proc_call(ident, tokens)?;
                 if rest.is_empty() {
                     Ok(ast)
@@ -69,6 +70,7 @@ fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
     if let Some(head) = tokens.first() {
         match head {
             Token::StrLit(str_lit) => Ok((ExprAst::StrLit(str_lit.clone()), &tokens[1..])),
+            Token::Ident(ident) => Ok((ExprAst::Ident(ident.clone()), &tokens[1..])),
             _ => Err(format!("Syntax error: Expected expression\n  {:?}", head)),
         }
     } else {

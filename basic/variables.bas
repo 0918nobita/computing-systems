@@ -1,1 +1,2 @@
-LET MSG = "Hello from BASIC"
+PRINT MSG
+PRINT MSG

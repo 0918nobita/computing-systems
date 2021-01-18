@@ -1,4 +1,5 @@
 use serde::Serialize;
+use std::fmt;
 
 #[derive(Clone, Copy, Debug, Serialize)]
 pub struct LocationEndpoint {
@@ -12,7 +13,17 @@ pub struct Location {
     pub end: LocationEndpoint,
 }
 
-trait Locatable {
+impl fmt::Display for Location {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}:{}-{}:{}",
+            self.start.line, self.start.column, self.end.line, self.end.column
+        )
+    }
+}
+
+pub trait Locatable {
     fn locate(&self) -> Location;
 }
 
@@ -78,6 +89,7 @@ pub enum Token {
 
 #[derive(Debug, Serialize)]
 pub enum ExprAst {
+    Ident(Identifier),
     StrLit(StringLiteral),
 }
 
