@@ -1,5 +1,5 @@
 /target
 
-out
-out.o
+*.bin
+*.o
 out.s

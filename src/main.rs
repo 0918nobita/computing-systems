@@ -2,7 +2,10 @@ extern crate basic;
 
 use basic::{compiler::compile, parser::parse, tokenizer::tokenize};
 use serde_json;
-use std::{env, fs, process};
+use std::{
+    env, fs,
+    process::{self, Command},
+};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -46,4 +49,14 @@ fn main() {
             process::exit(1);
         }
     }
+
+    Command::new("nasm")
+        .args(&["-f", "elf64", "out.s"])
+        .output()
+        .expect("Failed to execute `nasm`");
+
+    Command::new("ld")
+        .args(&["-o", "out.bin", "out.o"])
+        .output()
+        .expect("Failed to execute `ld`");
 }
