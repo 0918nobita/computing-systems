@@ -1,4 +1,6 @@
 use super::ast::{Comma, Equal, Identifier, Location, LocationEndpoint, StringLiteral, Token};
+use super::term_color::red_bold;
+use once_cell::sync::Lazy;
 use std::cell::RefCell;
 
 #[derive(PartialEq, Eq)]
@@ -8,7 +10,9 @@ enum TokenizerState {
     StringLiteral,
 }
 
-pub fn tokenize<L: Into<String>>(line: L, line_number: i32) -> Result<Vec<Token>, String> {
+static TOKENIZATION_ERROR: Lazy<String> = Lazy::new(|| red_bold("Tokenization error:"));
+
+pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>, String> {
     let line: String = line.into();
     let mut tokens = Vec::new();
 
@@ -26,11 +30,11 @@ pub fn tokenize<L: Into<String>>(line: L, line_number: i32) -> Result<Vec<Token>
                 state = TokenizerState::Ready;
                 let location = Location {
                     start: LocationEndpoint {
-                        line: line_number,
+                        line: line_index,
                         column: str_lit_start,
                     },
                     end: LocationEndpoint {
-                        line: line_number,
+                        line: line_index,
                         column: i as i32,
                     },
                 };
@@ -50,11 +54,11 @@ pub fn tokenize<L: Into<String>>(line: L, line_number: i32) -> Result<Vec<Token>
             if !ident_acc.is_empty() {
                 let location = Location {
                     start: LocationEndpoint {
-                        line: line_number,
+                        line: line_index,
                         column: ident_start,
                     },
                     end: LocationEndpoint {
-                        line: line_number,
+                        line: line_index,
                         column: i as i32 - 1,
                     },
                 };
@@ -72,11 +76,11 @@ pub fn tokenize<L: Into<String>>(line: L, line_number: i32) -> Result<Vec<Token>
             if state == TokenizerState::Identifier {
                 let location = Location {
                     start: LocationEndpoint {
-                        line: line_number,
+                        line: line_index,
                         column: ident_start,
                     },
                     end: LocationEndpoint {
-                        line: line_number,
+                        line: line_index,
                         column: i as i32 - 1,
                     },
                 };
@@ -87,7 +91,7 @@ pub fn tokenize<L: Into<String>>(line: L, line_number: i32) -> Result<Vec<Token>
             }
             tokens.push(Token::Comma(Comma {
                 loc: LocationEndpoint {
-                    line: line_number,
+                    line: line_index,
                     column: i as i32,
                 },
             }));
@@ -95,11 +99,11 @@ pub fn tokenize<L: Into<String>>(line: L, line_number: i32) -> Result<Vec<Token>
             if state == TokenizerState::Identifier {
                 let location = Location {
                     start: LocationEndpoint {
-                        line: line_number,
+                        line: line_index,
                         column: ident_start,
                     },
                     end: LocationEndpoint {
-                        line: line_number,
+                        line: line_index,
                         column: i as i32 - 1,
                     },
                 };
@@ -110,7 +114,7 @@ pub fn tokenize<L: Into<String>>(line: L, line_number: i32) -> Result<Vec<Token>
             }
             tokens.push(Token::Equal(Equal {
                 loc: LocationEndpoint {
-                    line: line_number,
+                    line: line_index,
                     column: i as i32,
                 },
             }));
@@ -126,11 +130,11 @@ pub fn tokenize<L: Into<String>>(line: L, line_number: i32) -> Result<Vec<Token>
     if !ident_acc.is_empty() {
         let location = Location {
             start: LocationEndpoint {
-                line: line_number,
+                line: line_index,
                 column: ident_start,
             },
             end: LocationEndpoint {
-                line: line_number,
+                line: line_index,
                 column: line.len() as i32 - 1,
             },
         };
@@ -141,7 +145,12 @@ pub fn tokenize<L: Into<String>>(line: L, line_number: i32) -> Result<Vec<Token>
     }
 
     if state == TokenizerState::StringLiteral {
-        Err(String::from("Syntax error: Expected end of string literal"))
+        Err(format!(
+            "{} ({}:{}) Expected end of string literal",
+            TOKENIZATION_ERROR.as_str(),
+            line_index + 1,
+            line.len()
+        ))
     } else {
         Ok(tokens)
     }

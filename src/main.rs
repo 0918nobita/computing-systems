@@ -17,12 +17,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut stmts = Vec::<StmtAst>::new();
 
     for (i, line) in content.split("\n").into_iter().enumerate() {
-        let tokens = tokenize(line, i as i32)?;
-        if tokens.is_empty() {
-            continue;
-        }
-        match parse(&tokens) {
-            Ok(stmt) => stmts.push(stmt),
+        match tokenize(line, i as i32) {
+            Ok(tokens) => {
+                if tokens.is_empty() {
+                    continue;
+                }
+                match parse(&tokens) {
+                    Ok(stmt) => stmts.push(stmt),
+                    Err(msg) => {
+                        eprintln!("{}", msg);
+                        process::exit(1);
+                    }
+                }
+            }
             Err(msg) => {
                 eprintln!("{}", msg);
                 process::exit(1);
