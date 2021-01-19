@@ -46,7 +46,8 @@ pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
             },
             Token::Ident(ident) => {
                 // 先頭のトークンが識別子なら、代入文と手続き呼び出しの2通りが想定される
-                let (ast, rest) = parse_proc_call(ident, tokens)?;
+                let (ast, rest) = parse_proc_call(ident, &tokens[1..])
+                    .or_else(|_| parse_var_assign(ident, &tokens[1..]))?;
                 if rest.is_empty() {
                     Ok(ast)
                 } else {
@@ -68,11 +69,36 @@ pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
     }
 }
 
+fn parse_var_assign<'a>(
+    ident: &Identifier,
+    tokens: &'a [Token],
+) -> Result<(StmtAst, &'a [Token]), String> {
+    if let Some(head) = tokens.first() {
+        match head {
+            Token::Equal(_) => {
+                let (expr_ast, rest) = parse_expr(&tokens[1..])?;
+                Ok((StmtAst::VarAssign(ident.clone(), expr_ast), rest))
+            }
+            _ => Err(format!(
+                "{} ({}) Expected `=`",
+                SYNTAX_ERROR.as_str(),
+                head.locate()
+            )),
+        }
+    } else {
+        Err(format!(
+            "{} ({}) Unexpected end of line",
+            SYNTAX_ERROR.as_str(),
+            ident.locate().end
+        ))
+    }
+}
+
 fn parse_proc_call<'a>(
     ident: &Identifier,
     tokens: &'a [Token],
 ) -> Result<(StmtAst, &'a [Token]), String> {
-    let (args, rest) = parse_argument_list(&tokens[1..])?;
+    let (args, rest) = parse_argument_list(tokens)?;
     Ok((StmtAst::ProcCall((*ident).clone(), args), rest))
 }
 
