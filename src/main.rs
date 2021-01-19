@@ -35,8 +35,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         serde_json::to_string_pretty(&stmts).unwrap() + "\n",
     )?;
 
-    let asm = compile(&stmts)?;
-    fs::write(&output_info.asm_path, asm.stringify())?;
+    match compile(&stmts) {
+        Ok(asm) => {
+            fs::write(&output_info.asm_path, asm.stringify())?;
+        }
+        Err(msg) => {
+            eprintln!("{}", msg);
+            process::exit(1);
+        }
+    }
 
     let status = Command::new("nasm")
         .args(&["-f", "elf64", output_info.asm_path.to_str().unwrap()])
