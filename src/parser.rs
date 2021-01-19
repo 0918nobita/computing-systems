@@ -4,6 +4,7 @@ use once_cell::sync::Lazy;
 
 static SYNTAX_ERROR: Lazy<String> = Lazy::new(|| red_bold("Syntax error:"));
 
+/// 1行分のトークン列を `StmtAst` に変換する再帰下降型パーサ
 pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
     if let Some(head) = tokens.first() {
         match head {
