@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 static COMPILE_ERROR: Lazy<String> = Lazy::new(|| red_bold("Compile error:"));
 
+#[derive(Clone)]
 struct CompilationContext {
     current_dat_index: i32,
     current_var_index: i32,
@@ -65,7 +66,25 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                     .insert(var.name.clone(), context.current_var_index);
                 context.current_var_index += 1;
             }
-            _ => return Err(format!("{} Not implemented", COMPILE_ERROR.as_str())),
+            StmtAst::VarAssign(var, expr) => {
+                let current_context = context.clone();
+                if let Some(var_index) = current_context.var_mappings.get(&var.name) {
+                    compile_expr(expr, &mut context, &mut dat, &mut txt)?;
+                    txt.inst("pop rax");
+                    txt.inst(format!(
+                        "mov qword[rsp+{}], rax  ; update {}",
+                        var_index * 8,
+                        var.name
+                    ));
+                } else {
+                    return Err(format!(
+                        "{} ({}) `{}` is not declared",
+                        COMPILE_ERROR.as_str(),
+                        var.locate(),
+                        var.name
+                    ));
+                }
+            }
         }
     }
 
