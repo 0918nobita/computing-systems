@@ -1,4 +1,4 @@
-use super::asm::{Asm, DataSection, DataSectionItem, TextSection};
+use super::asm::{Asm, DataSection, TextSection};
 use super::ast::{ExprAst, Locatable, StmtAst};
 use super::term_color::red_bold;
 use once_cell::sync::Lazy;
@@ -13,7 +13,7 @@ struct CompilationContext {
 }
 
 pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
-    let mut dat_items = Vec::<DataSectionItem>::new();
+    let mut dat = DataSection::new();
     let mut txt = TextSection::new();
 
     let mut context = CompilationContext {
@@ -33,7 +33,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                     ));
                 }
                 if let Some(head) = args.first() {
-                    compile_expr(head, &mut context, &mut dat_items, &mut txt)?;
+                    compile_expr(head, &mut context, &mut dat, &mut txt)?;
                     txt.inst("pop rdi");
                     txt.inst("call printString");
                 } else {
@@ -53,7 +53,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                 ))
             }
             StmtAst::VarDecl(var, init_expr) => {
-                compile_expr(init_expr, &mut context, &mut dat_items, &mut txt)?;
+                compile_expr(init_expr, &mut context, &mut dat, &mut txt)?;
                 txt.inst("pop rax");
                 txt.inst(format!(
                     "mov qword[rsp+{}], rax  ; intialize {}",
@@ -105,7 +105,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
     txt.inst("ret");
 
     Ok(Asm {
-        data: DataSection { items: dat_items },
+        data: dat,
         text: txt,
     })
 }
@@ -113,16 +113,16 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
 fn compile_expr(
     expr_ast: &ExprAst,
     context: &mut CompilationContext,
-    dat_items: &mut Vec<DataSectionItem>,
+    dat: &mut DataSection,
     txt: &mut TextSection,
 ) -> Result<(), String> {
     match expr_ast {
         ExprAst::StrLit(str_lit) => {
-            dat_items.push(DataSectionItem {
-                name: format!("dat{}", context.current_dat_index),
-                size: String::from("db"),
-                values: format!("'{}', 0", str_lit.value),
-            });
+            dat.append(
+                format!("dat{}", context.current_dat_index),
+                "db",
+                format!("'{}', 0", str_lit.value),
+            );
             txt.inst(format!("push dat{}", context.current_dat_index));
             context.current_dat_index += 1;
             Ok(())

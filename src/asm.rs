@@ -1,11 +1,30 @@
 pub struct DataSectionItem {
-    pub name: String,
-    pub size: String,
-    pub values: String,
+    name: String,
+    size: String,
+    values: String,
 }
 
 pub struct DataSection {
-    pub items: Vec<DataSectionItem>,
+    items: Vec<DataSectionItem>,
+}
+
+impl DataSection {
+    pub fn new() -> Self {
+        DataSection { items: Vec::new() }
+    }
+
+    pub fn append<N, S, V>(&mut self, name: N, size: S, values: V)
+    where
+        N: Into<String>,
+        S: Into<String>,
+        V: Into<String>,
+    {
+        self.items.push(DataSectionItem {
+            name: name.into(),
+            size: size.into(),
+            values: values.into(),
+        });
+    }
 }
 
 pub enum TextSectionItem {
