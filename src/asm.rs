@@ -14,7 +14,25 @@ pub enum TextSectionItem {
 }
 
 pub struct TextSection {
-    pub items: Vec<TextSectionItem>,
+    items: Vec<TextSectionItem>,
+}
+
+impl TextSection {
+    pub fn new() -> Self {
+        TextSection { items: Vec::new() }
+    }
+
+    pub fn label<N: Into<String>>(&mut self, name: N) {
+        self.items.push(TextSectionItem::Label(name.into()));
+    }
+
+    pub fn inst<I: Into<String>>(&mut self, inst: I) {
+        self.items.push(TextSectionItem::Instruction(inst.into()));
+    }
+
+    pub fn extend(&mut self, other: TextSection) {
+        self.items.extend(other.items)
+    }
 }
 
 pub struct Asm {

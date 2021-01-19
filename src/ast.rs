@@ -21,14 +21,7 @@ pub struct Location {
 
 impl fmt::Display for Location {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}:{}-{}:{}",
-            self.start.line + 1,
-            self.start.column + 1,
-            self.end.line + 1,
-            self.end.column + 1
-        )
+        write!(f, "{}-{}", self.start, self.end)
     }
 }
 

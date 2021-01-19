@@ -8,7 +8,8 @@ enum TokenizerState {
     StringLiteral,
 }
 
-pub fn tokenize(line: String, line_number: i32) -> Result<Vec<Token>, String> {
+pub fn tokenize<L: Into<String>>(line: L, line_number: i32) -> Result<Vec<Token>, String> {
+    let line: String = line.into();
     let mut tokens = Vec::new();
 
     let mut state = TokenizerState::Ready;

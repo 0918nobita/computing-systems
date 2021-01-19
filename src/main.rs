@@ -17,7 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut stmts = Vec::<StmtAst>::new();
 
     for (i, line) in content.split("\n").into_iter().enumerate() {
-        let tokens = tokenize(String::from(line), i as i32)?;
+        let tokens = tokenize(line, i as i32)?;
         if tokens.is_empty() {
             continue;
         }
@@ -72,8 +72,8 @@ struct OutputInfo {
     bin_path: PathBuf,
 }
 
-fn get_io_info(filename: &str) -> Result<(InputInfo, OutputInfo), String> {
-    let src_path = PathBuf::from(filename);
+fn get_io_info<F: Into<PathBuf>>(filename: F) -> Result<(InputInfo, OutputInfo), String> {
+    let src_path = filename.into();
     let src_dir = src_path.parent().ok_or("Failed to get directory info")?;
     let mut src_dir = src_dir.to_path_buf();
     let src_filename = src_path
