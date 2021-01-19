@@ -1,6 +1,10 @@
 use super::asm::{Asm, DataSection, DataSectionItem, TextSection};
 use super::ast::{ExprAst, Locatable, StmtAst};
+use super::term_color::red_bold;
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
+
+static COMPILE_ERROR: Lazy<String> = Lazy::new(|| red_bold("Compile error:"));
 
 struct CompilationContext {
     current_dat_index: i32,
@@ -23,7 +27,8 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
             StmtAst::ProcCall(proc, args) if proc.name == "PRINT" => {
                 if args.len() > 1 {
                     return Err(format!(
-                        "Compile error: ({}) Too many arguments",
+                        "{} ({}) Too many arguments",
+                        COMPILE_ERROR.as_str(),
                         proc.locate()
                     ));
                 }
@@ -33,14 +38,16 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                     txt.inst("call printString");
                 } else {
                     return Err(format!(
-                        "Compile error: ({}) Too few arguments",
+                        "{} ({}) Too few arguments",
+                        COMPILE_ERROR.as_str(),
                         proc.locate()
                     ));
                 }
             }
             StmtAst::ProcCall(proc, _) => {
                 return Err(format!(
-                    "Compile error: ({}) Unknown procedure `{}`",
+                    "{} ({}) Unknown procedure `{}`",
+                    COMPILE_ERROR.as_str(),
                     proc.locate(),
                     proc.name
                 ))
@@ -58,7 +65,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                     .insert(var.name.clone(), context.current_var_index);
                 context.current_var_index += 1;
             }
-            _ => return Err(String::from("Compile error: Not implemented")),
+            _ => return Err(format!("{} Not implemented", COMPILE_ERROR.as_str())),
         }
     }
 
@@ -126,7 +133,8 @@ fn compile_expr(
                 Ok(())
             } else {
                 Err(format!(
-                    "Failed to compile: ({}) {} is not defined",
+                    "{} ({}) {} is not defined",
+                    COMPILE_ERROR.as_str(),
                     ident.locate(),
                     ident.name
                 ))

@@ -1,4 +1,5 @@
 use super::ast::{ExprAst, Identifier, Locatable, StmtAst, Token};
+use super::term_color::red_bold;
 use once_cell::sync::Lazy;
 
 static SYNTAX_ERROR: Lazy<String> = Lazy::new(|| red_bold("Syntax error:"));
@@ -111,8 +112,4 @@ fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
     } else {
         Err(format!("{} Unexpected end of line", SYNTAX_ERROR.as_str()))
     }
-}
-
-fn red_bold(text: &str) -> String {
-    format!("\x1b[31m\x1b[1m{}\x1b[m", text)
 }
