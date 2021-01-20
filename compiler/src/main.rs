@@ -1,6 +1,6 @@
-extern crate basic;
+extern crate basic_compiler;
 
-use basic::{ast::StmtAst, compiler::compile, parser::parse, tokenizer::tokenize};
+use basic_compiler::{ast::StmtAst, compiler::compile, parser::parse, tokenizer::tokenize};
 use serde_json;
 use std::{
     env, fs,
