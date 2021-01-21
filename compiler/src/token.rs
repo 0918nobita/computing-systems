@@ -38,9 +38,14 @@ impl Locatable for StringLiteral {
     }
 }
 
-#[derive(Debug)]
 pub struct Comma {
     pub loc: Point,
+}
+
+impl fmt::Debug for Comma {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "`,`@{:?}", self.loc)
+    }
 }
 
 impl Locatable for Comma {
@@ -52,9 +57,14 @@ impl Locatable for Comma {
     }
 }
 
-#[derive(Debug)]
 pub struct Equal {
     pub loc: Point,
+}
+
+impl fmt::Debug for Equal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "`=`@{:?}", self.loc)
+    }
 }
 
 impl Locatable for Equal {
