@@ -1,10 +1,17 @@
 use super::location::{Locatable, Location, Point};
 use serde::Serialize;
+use std::fmt;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Serialize)]
 pub struct Identifier {
     pub name: String,
     pub location: Location,
+}
+
+impl fmt::Debug for Identifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}@{:?}", self.name, self.location)
+    }
 }
 
 impl Locatable for Identifier {
@@ -13,10 +20,16 @@ impl Locatable for Identifier {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Serialize)]
 pub struct StringLiteral {
     pub value: String,
     pub location: Location,
+}
+
+impl fmt::Debug for StringLiteral {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "\"{}\"@{:?}", self.value, self.location)
+    }
 }
 
 impl Locatable for StringLiteral {
