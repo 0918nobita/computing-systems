@@ -12,7 +12,7 @@ fn main() {
             Ok(line) => {
                 for hex_str in line.split_ascii_whitespace() {
                     if let Ok(n) = u8::from_str_radix(hex_str, 16) {
-                        stdout.write(&[n]).unwrap();
+                        stdout.write_all(&[n]).unwrap();
                     } else {
                         eprintln!("Failed to convert `{}` to u8", hex_str);
                         process::exit(1);

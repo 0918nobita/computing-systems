@@ -1,7 +1,6 @@
 extern crate compiler;
 
 use compiler::{ast::StmtAst, compiler::compile, parser::parse, tokenizer::tokenize};
-use serde_json;
 use std::{
     env, fs,
     path::PathBuf,

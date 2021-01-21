@@ -104,7 +104,7 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
             end: Point::new(line_index, line.len() as i32 - 1),
         };
         tokens.push(Token::Ident(Identifier {
-            name: ident_acc.clone(),
+            name: ident_acc,
             location,
         }))
     }
