@@ -2,12 +2,12 @@ use serde::Serialize;
 use std::fmt;
 
 #[derive(Clone, Copy, Debug, Serialize)]
-pub struct LocationEndpoint {
+pub struct Point {
     pub line: i32,
     pub column: i32,
 }
 
-impl fmt::Display for LocationEndpoint {
+impl fmt::Display for Point {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}:{}", self.line + 1, self.column + 1)
     }
@@ -15,8 +15,8 @@ impl fmt::Display for LocationEndpoint {
 
 #[derive(Clone, Copy, Debug, Serialize)]
 pub struct Location {
-    pub start: LocationEndpoint,
-    pub end: LocationEndpoint,
+    pub start: Point,
+    pub end: Point,
 }
 
 impl fmt::Display for Location {
@@ -55,7 +55,7 @@ impl Locatable for StringLiteral {
 
 #[derive(Debug)]
 pub struct Comma {
-    pub loc: LocationEndpoint,
+    pub loc: Point,
 }
 
 impl Locatable for Comma {
@@ -69,7 +69,7 @@ impl Locatable for Comma {
 
 #[derive(Debug)]
 pub struct Equal {
-    pub loc: LocationEndpoint,
+    pub loc: Point,
 }
 
 impl Locatable for Equal {
@@ -83,7 +83,7 @@ impl Locatable for Equal {
 
 #[derive(Debug)]
 pub struct LineBreak {
-    pub loc: LocationEndpoint,
+    pub loc: Point,
 }
 
 impl Locatable for LineBreak {

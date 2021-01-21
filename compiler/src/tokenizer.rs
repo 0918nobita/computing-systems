@@ -1,4 +1,4 @@
-use super::ast::{Comma, Equal, Identifier, Location, LocationEndpoint, StringLiteral, Token};
+use super::ast::{Comma, Equal, Identifier, Location, Point, StringLiteral, Token};
 use super::term_color::red_bold;
 use once_cell::sync::Lazy;
 use std::cell::RefCell;
@@ -29,11 +29,11 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
             if c == '"' {
                 state = TokenizerState::Ready;
                 let location = Location {
-                    start: LocationEndpoint {
+                    start: Point {
                         line: line_index,
                         column: str_lit_start,
                     },
-                    end: LocationEndpoint {
+                    end: Point {
                         line: line_index,
                         column: i as i32,
                     },
@@ -53,11 +53,11 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
         if c.is_whitespace() {
             if !ident_acc.is_empty() {
                 let location = Location {
-                    start: LocationEndpoint {
+                    start: Point {
                         line: line_index,
                         column: ident_start,
                     },
-                    end: LocationEndpoint {
+                    end: Point {
                         line: line_index,
                         column: i as i32 - 1,
                     },
@@ -75,11 +75,11 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
         } else if c == ',' {
             if state == TokenizerState::Identifier {
                 let location = Location {
-                    start: LocationEndpoint {
+                    start: Point {
                         line: line_index,
                         column: ident_start,
                     },
-                    end: LocationEndpoint {
+                    end: Point {
                         line: line_index,
                         column: i as i32 - 1,
                     },
@@ -90,7 +90,7 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
                 }));
             }
             tokens.push(Token::Comma(Comma {
-                loc: LocationEndpoint {
+                loc: Point {
                     line: line_index,
                     column: i as i32,
                 },
@@ -98,11 +98,11 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
         } else if c == '=' {
             if state == TokenizerState::Identifier {
                 let location = Location {
-                    start: LocationEndpoint {
+                    start: Point {
                         line: line_index,
                         column: ident_start,
                     },
-                    end: LocationEndpoint {
+                    end: Point {
                         line: line_index,
                         column: i as i32 - 1,
                     },
@@ -113,7 +113,7 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
                 }));
             }
             tokens.push(Token::Equal(Equal {
-                loc: LocationEndpoint {
+                loc: Point {
                     line: line_index,
                     column: i as i32,
                 },
@@ -129,11 +129,11 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
 
     if !ident_acc.is_empty() {
         let location = Location {
-            start: LocationEndpoint {
+            start: Point {
                 line: line_index,
                 column: ident_start,
             },
-            end: LocationEndpoint {
+            end: Point {
                 line: line_index,
                 column: line.len() as i32 - 1,
             },
