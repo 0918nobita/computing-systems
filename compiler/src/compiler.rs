@@ -1,5 +1,6 @@
 use super::asm::{Asm, DataSection, TextSection};
-use super::ast::{ExprAst, Locatable, StmtAst};
+use super::ast::{ExprAst, StmtAst};
+use super::location::Locatable;
 use super::term_color::red_bold;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;

@@ -1,5 +1,6 @@
-use super::ast::{Comma, Equal, Identifier, Location, Point, StringLiteral, Token};
+use super::location::{Location, Point};
 use super::term_color::red_bold;
+use super::token::{Comma, Equal, Identifier, StringLiteral, Token};
 use once_cell::sync::Lazy;
 use std::cell::RefCell;
 

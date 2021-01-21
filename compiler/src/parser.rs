@@ -1,5 +1,7 @@
-use super::ast::{ExprAst, Identifier, Locatable, StmtAst, Token};
+use super::ast::{ExprAst, StmtAst};
+use super::location::Locatable;
 use super::term_color::red_bold;
+use super::token::{Identifier, Token};
 use once_cell::sync::Lazy;
 
 static SYNTAX_ERROR: Lazy<String> = Lazy::new(|| red_bold("Syntax error:"));
