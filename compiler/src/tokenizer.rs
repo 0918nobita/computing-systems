@@ -29,14 +29,8 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
             if c == '"' {
                 state = TokenizerState::Ready;
                 let location = Location {
-                    start: Point {
-                        line: line_index,
-                        column: str_lit_start,
-                    },
-                    end: Point {
-                        line: line_index,
-                        column: i as i32,
-                    },
+                    start: Point::new(line_index, str_lit_start),
+                    end: Point::new(line_index, i as i32),
                 };
                 tokens.push(Token::StrLit(StringLiteral {
                     value: str_lit.borrow().clone(),
@@ -53,14 +47,8 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
         if c.is_whitespace() {
             if !ident_acc.is_empty() {
                 let location = Location {
-                    start: Point {
-                        line: line_index,
-                        column: ident_start,
-                    },
-                    end: Point {
-                        line: line_index,
-                        column: i as i32 - 1,
-                    },
+                    start: Point::new(line_index, ident_start),
+                    end: Point::new(line_index, i as i32 - 1),
                 };
                 tokens.push(Token::Ident(Identifier {
                     name: ident_acc.clone(),
@@ -75,14 +63,8 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
         } else if c == ',' {
             if state == TokenizerState::Identifier {
                 let location = Location {
-                    start: Point {
-                        line: line_index,
-                        column: ident_start,
-                    },
-                    end: Point {
-                        line: line_index,
-                        column: i as i32 - 1,
-                    },
+                    start: Point::new(line_index, ident_start),
+                    end: Point::new(line_index, i as i32 - 1),
                 };
                 tokens.push(Token::Ident(Identifier {
                     name: ident_acc.clone(),
@@ -90,22 +72,13 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
                 }));
             }
             tokens.push(Token::Comma(Comma {
-                loc: Point {
-                    line: line_index,
-                    column: i as i32,
-                },
+                loc: Point::new(line_index, i as i32),
             }));
         } else if c == '=' {
             if state == TokenizerState::Identifier {
                 let location = Location {
-                    start: Point {
-                        line: line_index,
-                        column: ident_start,
-                    },
-                    end: Point {
-                        line: line_index,
-                        column: i as i32 - 1,
-                    },
+                    start: Point::new(line_index, ident_start),
+                    end: Point::new(line_index, i as i32 - 1),
                 };
                 tokens.push(Token::Ident(Identifier {
                     name: ident_acc.clone(),
@@ -113,10 +86,7 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
                 }));
             }
             tokens.push(Token::Equal(Equal {
-                loc: Point {
-                    line: line_index,
-                    column: i as i32,
-                },
+                loc: Point::new(line_index, i as i32),
             }));
         } else if state != TokenizerState::Identifier {
             state = TokenizerState::Identifier;
@@ -129,14 +99,8 @@ pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>,
 
     if !ident_acc.is_empty() {
         let location = Location {
-            start: Point {
-                line: line_index,
-                column: ident_start,
-            },
-            end: Point {
-                line: line_index,
-                column: line.len() as i32 - 1,
-            },
+            start: Point::new(line_index, ident_start),
+            end: Point::new(line_index, line.len() as i32 - 1),
         };
         tokens.push(Token::Ident(Identifier {
             name: ident_acc.clone(),

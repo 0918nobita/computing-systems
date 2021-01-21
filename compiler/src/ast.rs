@@ -1,15 +1,31 @@
 use serde::Serialize;
 use std::fmt;
 
-#[derive(Clone, Copy, Debug, Serialize)]
+#[derive(Clone, Copy, Serialize)]
 pub struct Point {
-    pub line: i32,
-    pub column: i32,
+    line: i32,
+    column: i32,
+}
+
+impl Point {
+    pub fn new(line: i32, column: i32) -> Self {
+        Point { line, column }
+    }
+
+    fn stringify(&self) -> String {
+        format!("{}:{}", self.line + 1, self.column + 1)
+    }
+}
+
+impl fmt::Debug for Point {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.stringify())
+    }
 }
 
 impl fmt::Display for Point {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}:{}", self.line + 1, self.column + 1)
+        write!(f, "{}", self.stringify())
     }
 }
 

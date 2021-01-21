@@ -14,9 +14,19 @@ Target: x86-64 Linux
 ```bash
 cd compiler
 cargo run -- ../basic/hello.bas
-./basic/hello.bin
+../basic/hello.bin
 
 cargo run -- ../basic/variables.bas
+../basic/variables.bin
+```
+
+or
+
+```bash
+cargo run --bin compiler -- ./basic/hello.bas
+./basic/hello.bin
+
+cargo run --bin compiler -- ./basic/variables.bas
 ./basic/variables.bin
 ```
 
