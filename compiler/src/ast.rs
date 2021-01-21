@@ -82,11 +82,26 @@ impl Locatable for Equal {
 }
 
 #[derive(Debug)]
+pub struct LineBreak {
+    pub loc: LocationEndpoint,
+}
+
+impl Locatable for LineBreak {
+    fn locate(&self) -> Location {
+        Location {
+            start: self.loc,
+            end: self.loc,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub enum Token {
     Ident(Identifier),
     StrLit(StringLiteral),
     Comma(Comma),
     Equal(Equal),
+    LineBreak(LineBreak),
 }
 
 impl Locatable for Token {
@@ -96,6 +111,7 @@ impl Locatable for Token {
             Token::StrLit(str_lit) => str_lit.locate(),
             Token::Comma(comma) => comma.locate(),
             Token::Equal(equal) => equal.locate(),
+            Token::LineBreak(line_break) => line_break.locate(),
         }
     }
 }
