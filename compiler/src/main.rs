@@ -15,6 +15,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let content = fs::read_to_string(input_info.src_path).expect("Failed to read the source file");
     let mut stmts = Vec::<StmtAst>::new();
 
+    // FIXME: LineBreak トークンを利用して、すべての行をまとめてトークナイズするように修正する
+    // https://github.com/0918nobita/basic/issues/1
     for (i, line) in content.split("\n").into_iter().enumerate() {
         match tokenize(line, i as i32) {
             Ok(tokens) => {
