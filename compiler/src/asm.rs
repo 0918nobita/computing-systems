@@ -8,9 +8,15 @@ pub struct DataSection {
     items: Vec<DataSectionItem>,
 }
 
+impl Default for DataSection {
+    fn default() -> Self {
+        DataSection { items: Vec::new() }
+    }
+}
+
 impl DataSection {
     pub fn new() -> Self {
-        DataSection { items: Vec::new() }
+        DataSection::default()
     }
 
     pub fn append<N, S, V>(&mut self, name: N, size: S, values: V)
@@ -36,9 +42,15 @@ pub struct TextSection {
     items: Vec<TextSectionItem>,
 }
 
+impl Default for TextSection {
+    fn default() -> Self {
+        TextSection { items: Vec::new() }
+    }
+}
+
 impl TextSection {
     pub fn new() -> Self {
-        TextSection { items: Vec::new() }
+        TextSection::default()
     }
 
     pub fn label<N: Into<String>>(&mut self, name: N) {
