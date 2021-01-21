@@ -2,7 +2,12 @@
 
 (WIP) Language implementation in Rust
 
-Target: x86_64 Linux
+Target: x86-64 Linux
+
+## Requirements
+
+- GNU Binutils
+- NASM
 
 ## Compiler
 
