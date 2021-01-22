@@ -96,9 +96,10 @@ fn expect_eol(tokens: &[Token]) -> Result<(), String> {
         match head {
             Token::LineBreak(_) => Ok(()),
             _ => Err(format!(
-                "{} ({}) Unexpected token",
+                "{} ({}) [EOL] or [EOF] expected but {:?} found",
                 SYNTAX_ERROR.as_str(),
-                head.locate()
+                head.locate(),
+                head
             )),
         }
     } else {
