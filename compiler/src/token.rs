@@ -76,9 +76,14 @@ impl Locatable for Equal {
     }
 }
 
-#[derive(Debug)]
 pub struct LineBreak {
     pub loc: Point,
+}
+
+impl fmt::Debug for LineBreak {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "↓@{:?}", self.loc)
+    }
 }
 
 impl Locatable for LineBreak {

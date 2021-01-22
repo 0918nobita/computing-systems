@@ -1,6 +1,6 @@
 extern crate compiler;
 
-use compiler::{ast::StmtAst, compiler::compile, parser::parse, tokenizer::tokenize};
+use compiler::{compiler::compile, parser::parse, tokenizer::tokenize};
 use std::{
     env, fs,
     path::PathBuf,
@@ -13,30 +13,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (input_info, output_info) = get_io_info(first_arg)?;
     let content = fs::read_to_string(input_info.src_path).expect("Failed to read the source file");
-    let mut stmts = Vec::<StmtAst>::new();
 
-    // FIXME: LineBreak トークンを利用して、すべての行をまとめてトークナイズするように修正する
-    // https://github.com/0918nobita/basic/issues/1
-    for (i, line) in content.split("\n").into_iter().enumerate() {
-        match tokenize(line, i as i32) {
-            Ok(tokens) => {
-                if tokens.is_empty() {
-                    continue;
-                }
-                match parse(&tokens) {
-                    Ok(stmt) => stmts.push(stmt),
-                    Err(msg) => {
-                        eprintln!("{}", msg);
-                        process::exit(1);
-                    }
-                }
-            }
+    let stmts = match tokenize(&content) {
+        Ok(tokens) => match parse(&tokens) {
+            Ok(stmts) => stmts,
             Err(msg) => {
                 eprintln!("{}", msg);
                 process::exit(1);
             }
+        },
+        Err(msg) => {
+            eprintln!("{}", msg);
+            process::exit(1);
         }
-    }
+    };
 
     fs::write(
         output_info.ast_path,

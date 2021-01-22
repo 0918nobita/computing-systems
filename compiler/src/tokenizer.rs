@@ -1,122 +1,210 @@
 use super::location::{Location, Point};
 use super::term_color::red_bold;
-use super::token::{Comma, Equal, Identifier, StringLiteral, Token};
+use super::token::{Comma, Equal, Identifier, LineBreak, StringLiteral, Token};
 use once_cell::sync::Lazy;
-use std::cell::RefCell;
 
 #[derive(PartialEq, Eq)]
 enum TokenizerState {
     Ready,
-    Identifier,
-    StringLiteral,
+    Identifier(IdentState),
+    StringLiteral(StrLitState),
+}
+
+#[derive(PartialEq, Eq)]
+struct IdentState {
+    start: i32,
+    acc: String,
+}
+
+#[derive(PartialEq, Eq)]
+struct StrLitState {
+    start: i32,
+    acc: String,
 }
 
 static TOKENIZATION_ERROR: Lazy<String> = Lazy::new(|| red_bold("Tokenization error:"));
 
-pub fn tokenize<L: Into<String>>(line: L, line_index: i32) -> Result<Vec<Token>, String> {
-    let line: String = line.into();
-    let mut tokens = Vec::new();
+pub fn tokenize(line: &str) -> Result<Vec<Token>, String> {
+    let len = line.len();
 
+    let mut tokens = Vec::<Token>::new();
     let mut state = TokenizerState::Ready;
-
-    let mut ident_start: i32 = 0;
-    let mut ident_acc = String::new();
-
-    let mut str_lit_start = 0;
-    let str_lit = RefCell::new(String::new());
+    let mut line_number = 0;
+    let mut column_number = 0;
 
     for (i, c) in line.chars().enumerate() {
-        if state == TokenizerState::StringLiteral {
-            if c == '"' {
-                state = TokenizerState::Ready;
-                let location = Location {
-                    start: Point::new(line_index, str_lit_start),
-                    end: Point::new(line_index, i as i32),
-                };
-                tokens.push(Token::StrLit(StringLiteral {
-                    value: str_lit.borrow().clone(),
-                    location,
-                }));
-                str_lit.borrow_mut().clear();
-                continue;
+        if c == '\n' {
+            match state {
+                TokenizerState::Identifier(IdentState { start, ref acc }) => {
+                    let location = Location {
+                        start: Point::new(line_number, start),
+                        end: Point::new(line_number, column_number - 1),
+                    };
+                    tokens.push(Token::Ident(Identifier {
+                        name: acc.clone(),
+                        location,
+                    }));
+                    state = TokenizerState::Ready;
+                }
+                TokenizerState::StringLiteral(_) => {
+                    return Err(format!(
+                        "{} ({}:{}) Unexpected [EOL]",
+                        TOKENIZATION_ERROR.as_str(),
+                        line_number,
+                        column_number
+                    ));
+                }
+                _ => (),
             }
 
-            str_lit.borrow_mut().push(c);
+            tokens.push(Token::LineBreak(LineBreak {
+                loc: Point::new(line_number, column_number),
+            }));
+
+            line_number += 1;
+            column_number = 0;
             continue;
         }
 
+        match state {
+            TokenizerState::StringLiteral(StrLitState { start, ref acc }) => {
+                if c == '"' {
+                    let location = Location {
+                        start: Point::new(line_number, start),
+                        end: Point::new(line_number, column_number),
+                    };
+                    tokens.push(Token::StrLit(StringLiteral {
+                        value: acc.clone(),
+                        location,
+                    }));
+                    column_number += 1;
+                    state = TokenizerState::Ready;
+                    continue;
+                }
+
+                state = TokenizerState::StringLiteral(StrLitState {
+                    start,
+                    acc: format!("{}{}", acc, c),
+                });
+                column_number += 1;
+                continue;
+            }
+            _ => (),
+        }
+
         if c.is_whitespace() {
-            if !ident_acc.is_empty() {
-                let location = Location {
-                    start: Point::new(line_index, ident_start),
-                    end: Point::new(line_index, i as i32 - 1),
-                };
-                tokens.push(Token::Ident(Identifier {
-                    name: ident_acc.clone(),
-                    location,
-                }));
-                ident_acc.clear();
-                state = TokenizerState::Ready;
+            match state {
+                TokenizerState::Identifier(IdentState { start, ref acc }) => {
+                    let location = Location {
+                        start: Point::new(line_number, start),
+                        end: Point::new(line_number, column_number - 1),
+                    };
+                    tokens.push(Token::Ident(Identifier {
+                        name: acc.clone(),
+                        location,
+                    }));
+                    state = TokenizerState::Ready;
+                }
+                _ => (),
             }
         } else if c == '"' {
-            state = TokenizerState::StringLiteral;
-            str_lit_start = i as i32;
-        } else if c == ',' {
-            if state == TokenizerState::Identifier {
-                let location = Location {
-                    start: Point::new(line_index, ident_start),
-                    end: Point::new(line_index, i as i32 - 1),
-                };
-                tokens.push(Token::Ident(Identifier {
-                    name: ident_acc.clone(),
-                    location,
-                }));
+            match state {
+                TokenizerState::Identifier(IdentState { start, ref acc }) => {
+                    let location = Location {
+                        start: Point::new(line_number, start),
+                        end: Point::new(line_number, column_number - 1),
+                    };
+                    tokens.push(Token::Ident(Identifier {
+                        name: acc.clone(),
+                        location,
+                    }));
+                }
+                _ => (),
             }
+
+            state = TokenizerState::StringLiteral(StrLitState {
+                start: column_number,
+                acc: String::new(),
+            });
+        } else if c == ',' {
+            match state {
+                TokenizerState::Identifier(IdentState { start, ref acc }) => {
+                    let location = Location {
+                        start: Point::new(line_number, start),
+                        end: Point::new(line_number, column_number - 1),
+                    };
+                    tokens.push(Token::Ident(Identifier {
+                        name: acc.clone(),
+                        location,
+                    }));
+                    state = TokenizerState::Ready;
+                }
+                _ => (),
+            }
+
             tokens.push(Token::Comma(Comma {
-                loc: Point::new(line_index, i as i32),
+                loc: Point::new(line_number, column_number),
             }));
         } else if c == '=' {
-            if state == TokenizerState::Identifier {
-                let location = Location {
-                    start: Point::new(line_index, ident_start),
-                    end: Point::new(line_index, i as i32 - 1),
-                };
-                tokens.push(Token::Ident(Identifier {
-                    name: ident_acc.clone(),
-                    location,
-                }));
+            match state {
+                TokenizerState::Identifier(IdentState { start, ref acc }) => {
+                    let location = Location {
+                        start: Point::new(line_number, start),
+                        end: Point::new(line_number, column_number - 1),
+                    };
+                    tokens.push(Token::Ident(Identifier {
+                        name: acc.clone(),
+                        location,
+                    }));
+                    state = TokenizerState::Ready;
+                }
+                _ => (),
             }
             tokens.push(Token::Equal(Equal {
-                loc: Point::new(line_index, i as i32),
+                loc: Point::new(line_number, column_number),
             }));
-        } else if state != TokenizerState::Identifier {
-            state = TokenizerState::Identifier;
-            ident_start = i as i32;
-            ident_acc.push(c);
         } else {
-            ident_acc.push(c);
+            match state {
+                TokenizerState::Identifier(IdentState { start, ref acc }) => {
+                    let acc = format!("{}{}", acc, c);
+                    state = TokenizerState::Identifier(IdentState { start, acc })
+                }
+                _ => {
+                    let acc = c.to_string();
+                    state = TokenizerState::Identifier(IdentState {
+                        start: column_number,
+                        acc,
+                    })
+                }
+            }
         }
+
+        if i == len - 1 {
+            match state {
+                TokenizerState::Identifier(IdentState { start, ref acc }) => {
+                    let location = Location {
+                        start: Point::new(line_number, start),
+                        end: Point::new(line_number, column_number),
+                    };
+                    tokens.push(Token::Ident(Identifier {
+                        name: acc.clone(),
+                        location,
+                    }));
+                }
+                TokenizerState::StringLiteral(_) => {
+                    return Err(format!(
+                        "{} ({}:{}) Unexpected end of line",
+                        TOKENIZATION_ERROR.as_str(),
+                        line_number,
+                        column_number
+                    ));
+                }
+                _ => (),
+            }
+        }
+
+        column_number += 1;
     }
 
-    if !ident_acc.is_empty() {
-        let location = Location {
-            start: Point::new(line_index, ident_start),
-            end: Point::new(line_index, line.len() as i32 - 1),
-        };
-        tokens.push(Token::Ident(Identifier {
-            name: ident_acc,
-            location,
-        }))
-    }
-
-    if state == TokenizerState::StringLiteral {
-        Err(format!(
-            "{} ({}:{}) Expected end of string literal",
-            TOKENIZATION_ERROR.as_str(),
-            line_index + 1,
-            line.len()
-        ))
-    } else {
-        Ok(tokens)
-    }
+    Ok(tokens)
 }

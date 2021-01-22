@@ -6,68 +6,104 @@ use once_cell::sync::Lazy;
 
 static SYNTAX_ERROR: Lazy<String> = Lazy::new(|| red_bold("Syntax error:"));
 
-/// 1行分のトークン列を `StmtAst` に変換する再帰下降型パーサ
-pub fn parse(tokens: &[Token]) -> Result<StmtAst, String> {
-    if let Some(head) = tokens.first() {
-        match head {
-            Token::Ident(ident) if ident.name == "VAR" => match tokens.get(1) {
+pub fn parse(tokens: &[Token]) -> Result<Vec<StmtAst>, String> {
+    let mut tokens = tokens;
+    let mut stmts = Vec::<StmtAst>::new();
+
+    loop {
+        loop {
+            match tokens.first() {
+                Some(Token::LineBreak(_)) => {
+                    tokens = &tokens[1..];
+                    continue;
+                }
+                Some(_) => {
+                    break;
+                }
+                None => {
+                    return Ok(stmts);
+                }
+            }
+        }
+
+        match tokens.first() {
+            Some(Token::Ident(ident)) if ident.name == "VAR" => match tokens.get(1) {
                 Some(Token::Ident(var_ident)) => match tokens.get(2) {
                     Some(Token::Equal(_)) => {
                         let (expr, rest) = parse_expr(&tokens[3..])?;
-                        if rest.is_empty() {
-                            Ok(StmtAst::VarDecl(var_ident.clone(), expr))
-                        } else {
-                            Err(format!(
-                                "{} ({}) Unexpected token",
-                                SYNTAX_ERROR.as_str(),
-                                rest[0].locate()
-                            ))
-                        }
+                        stmts.push(StmtAst::VarDecl(var_ident.clone(), expr));
+                        expect_eol(&rest)?;
+                        tokens = rest;
                     }
-                    Some(token) => Err(format!(
-                        "{} ({}) Expected `=`",
+                    Some(token) => {
+                        return Err(format!(
+                            "{} ({}) `=` expected but {:?} found",
+                            SYNTAX_ERROR.as_str(),
+                            token.locate(),
+                            token
+                        ));
+                    }
+                    None => {
+                        return Err(format!(
+                            "{} `=` expected but [EOF] found",
+                            SYNTAX_ERROR.as_str()
+                        ));
+                    }
+                },
+                Some(Token::LineBreak(line_break)) => {
+                    return Err(format!(
+                        "{} ({}) Identifier expected but [EOL] found",
+                        SYNTAX_ERROR.as_str(),
+                        line_break.locate()
+                    ));
+                }
+                Some(token) => {
+                    return Err(format!(
+                        "{} ({}) Unexpected token",
                         SYNTAX_ERROR.as_str(),
                         token.locate()
-                    )),
-                    None => Err(format!(
-                        "{} ({}) Unexpected end of line",
-                        SYNTAX_ERROR.as_str(),
-                        var_ident.locate().end
-                    )),
-                },
-                Some(token) => Err(format!(
-                    "{} ({}) Unexpected token",
-                    SYNTAX_ERROR.as_str(),
-                    token.locate()
-                )),
-                None => Err(format!(
-                    "{} ({}) Unexpected end of line",
-                    SYNTAX_ERROR.as_str(),
-                    ident.locate().end
-                )),
+                    ));
+                }
+                None => {
+                    return Err(format!("{} Unexpected end of file", SYNTAX_ERROR.as_str()));
+                }
             },
-            Token::Ident(ident) => {
+            Some(Token::Ident(ident)) => {
                 // 先頭のトークンが識別子なら、代入文と手続き呼び出しの2通りが想定される
                 let (ast, rest) = parse_proc_call(ident, &tokens[1..])
                     .or_else(|_| parse_var_assign(ident, &tokens[1..]))?;
-                if rest.is_empty() {
-                    Ok(ast)
-                } else {
-                    Err(format!(
-                        "{} ({}) Unexpected token",
-                        SYNTAX_ERROR.as_str(),
-                        rest[0].locate()
-                    ))
-                }
+                stmts.push(ast);
+                expect_eol(&rest)?;
+                tokens = rest;
             }
+            Some(head) => {
+                println!("{:?}", head);
+                return Err(format!(
+                    "{} ({}) Expected identifier",
+                    SYNTAX_ERROR.as_str(),
+                    head.locate()
+                ));
+            }
+            None => {
+                unreachable!();
+            }
+        }
+    }
+}
+
+fn expect_eol(tokens: &[Token]) -> Result<(), String> {
+    if let Some(head) = tokens.first() {
+        match head {
+            Token::LineBreak(_) => Ok(()),
             _ => Err(format!(
-                "{} ({}) Expected identifier",
+                "{} ({}) [EOL] or [EOF] expected but {:?} found",
                 SYNTAX_ERROR.as_str(),
-                head.locate()
+                head.locate(),
+                head
             )),
         }
     } else {
-        Err(format!("{} No tokens found", SYNTAX_ERROR.as_str()))
+        Ok(())
     }
 }
 
