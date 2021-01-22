@@ -15,8 +15,8 @@ struct CompilationContext {
 }
 
 pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
-    let mut dat = DataSection::new();
-    let mut txt = TextSection::new();
+    let mut dat = DataSection::default();
+    let mut txt = TextSection::default();
 
     let mut context = CompilationContext {
         current_dat_index: 0,
@@ -24,7 +24,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
         var_mappings: HashMap::new(),
     };
 
-    for stmt in stmts.into_iter() {
+    for stmt in stmts.iter() {
         match stmt {
             StmtAst::ProcCall(proc, args) if proc.name == "PRINT" => {
                 if args.len() > 1 {
@@ -89,7 +89,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
         }
     }
 
-    let mut new_txt = TextSection::new();
+    let mut new_txt = TextSection::default();
     new_txt.label("_start");
     new_txt.inst(format!("sub rsp, {}", context.current_var_index * 8));
     new_txt.inst("mov rbp, rsp");

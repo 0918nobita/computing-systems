@@ -4,21 +4,12 @@ pub struct DataSectionItem {
     values: String,
 }
 
+#[derive(Default)]
 pub struct DataSection {
     items: Vec<DataSectionItem>,
 }
 
-impl Default for DataSection {
-    fn default() -> Self {
-        DataSection { items: Vec::new() }
-    }
-}
-
 impl DataSection {
-    pub fn new() -> Self {
-        DataSection::default()
-    }
-
     pub fn append<N, S, V>(&mut self, name: N, size: S, values: V)
     where
         N: Into<String>,
@@ -38,21 +29,12 @@ pub enum TextSectionItem {
     Instruction(String),
 }
 
+#[derive(Default)]
 pub struct TextSection {
     items: Vec<TextSectionItem>,
 }
 
-impl Default for TextSection {
-    fn default() -> Self {
-        TextSection { items: Vec::new() }
-    }
-}
-
 impl TextSection {
-    pub fn new() -> Self {
-        TextSection::default()
-    }
-
     pub fn label<N: Into<String>>(&mut self, name: N) {
         self.items.push(TextSectionItem::Label(name.into()));
     }
