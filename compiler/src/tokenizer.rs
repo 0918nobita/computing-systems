@@ -12,7 +12,7 @@ enum TokenizerState {
 
 static TOKENIZATION_ERROR: Lazy<String> = Lazy::new(|| red_bold("Tokenization error:"));
 
-pub fn tokenize_all(line: &str) -> Result<Vec<Token>, String> {
+pub fn tokenize(line: &str) -> Result<Vec<Token>, String> {
     let len = line.len();
 
     let mut tokens = Vec::<Token>::new();

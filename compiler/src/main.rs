@@ -1,10 +1,6 @@
 extern crate compiler;
 
-use compiler::{
-    compiler::compile,
-    parser::parse_all,
-    tokenizer::tokenize_all,
-};
+use compiler::{compiler::compile, parser::parse, tokenizer::tokenize};
 use std::{
     env, fs,
     path::PathBuf,
@@ -18,8 +14,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (input_info, output_info) = get_io_info(first_arg)?;
     let content = fs::read_to_string(input_info.src_path).expect("Failed to read the source file");
 
-    let stmts = match tokenize_all(&content) {
-        Ok(tokens) => match parse_all(&tokens) {
+    let stmts = match tokenize(&content) {
+        Ok(tokens) => match parse(&tokens) {
             Ok(stmts) => stmts,
             Err(msg) => {
                 eprintln!("{}", msg);

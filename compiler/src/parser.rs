@@ -6,7 +6,7 @@ use once_cell::sync::Lazy;
 
 static SYNTAX_ERROR: Lazy<String> = Lazy::new(|| red_bold("Syntax error:"));
 
-pub fn parse_all(tokens: &[Token]) -> Result<Vec<StmtAst>, String> {
+pub fn parse(tokens: &[Token]) -> Result<Vec<StmtAst>, String> {
     let mut tokens = tokens;
     let mut stmts = Vec::<StmtAst>::new();
 
