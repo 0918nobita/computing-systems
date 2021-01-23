@@ -8,17 +8,17 @@ use std::collections::HashMap;
 static COMPILE_ERROR: Lazy<String> = Lazy::new(|| red_bold("Compile error:"));
 
 #[derive(Clone)]
-struct CompilationContext {
+struct CodegenContext {
     current_dat_index: i32,
     current_var_index: i32,
     var_mappings: HashMap<String, i32>,
 }
 
-pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
+pub fn gen_asm(stmts: &[StmtAst]) -> Result<Asm, String> {
     let mut dat = DataSection::default();
     let mut txt = TextSection::default();
 
-    let mut context = CompilationContext {
+    let mut context = CodegenContext {
         current_dat_index: 0,
         current_var_index: 0,
         var_mappings: HashMap::new(),
@@ -35,7 +35,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                     ));
                 }
                 if let Some(head) = args.first() {
-                    compile_expr(head, &mut context, &mut dat, &mut txt)?;
+                    codegen_expr(head, &mut context, &mut dat, &mut txt)?;
                     txt.inst("pop rdi");
                     txt.inst("call printString");
                 } else {
@@ -55,7 +55,7 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                 ))
             }
             StmtAst::VarDecl(var_ident, init_expr) => {
-                compile_expr(init_expr, &mut context, &mut dat, &mut txt)?;
+                codegen_expr(init_expr, &mut context, &mut dat, &mut txt)?;
 
                 txt.inst("pop rax");
                 txt.inst(format!(
@@ -71,7 +71,8 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
             StmtAst::VarAssign(var_ident, expr) => {
                 let current_context = context.clone();
                 if let Some(var_index) = current_context.var_mappings.get(&var_ident.name) {
-                    compile_expr(expr, &mut context, &mut dat, &mut txt)?;
+                    codegen_expr(expr, &mut context, &mut dat, &mut txt)?;
+
                     txt.inst("pop rax");
                     txt.inst(format!(
                         "mov qword[rsp+{}], rax  ; update {}",
@@ -131,9 +132,9 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
     })
 }
 
-fn compile_expr(
+fn codegen_expr(
     expr_ast: &ExprAst,
-    context: &mut CompilationContext,
+    context: &mut CodegenContext,
     dat: &mut DataSection,
     txt: &mut TextSection,
 ) -> Result<(), String> {

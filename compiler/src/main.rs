@@ -1,6 +1,6 @@
 extern crate compiler;
 
-use compiler::{compiler::compile, parser::parse, tokenizer::tokenize};
+use compiler::{codegen::gen_asm, parser::parse, tokenizer::tokenize};
 use std::{
     env, fs,
     path::PathBuf,
@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         serde_json::to_string_pretty(&stmts).unwrap() + "\n",
     )?;
 
-    let asm = unwrap_or_else_terminate(compile(&stmts));
+    let asm = unwrap_or_else_terminate(gen_asm(&stmts));
 
     fs::write(&output_info.asm_path, asm.stringify())?;
 

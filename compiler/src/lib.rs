@@ -1,6 +1,6 @@
 mod asm;
 pub mod ast;
-pub mod compiler;
+pub mod codegen;
 mod location;
 pub mod parser;
 mod term_color;

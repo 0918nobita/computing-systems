@@ -55,7 +55,7 @@ pub fn parse(tokens: &[Token]) -> Result<Vec<StmtAst>, String> {
                             ));
                         }
                     }
-                },
+                }
                 Some(Token::LineBreak(line_break)) => {
                     return Err(format!(
                         "{} ({}) Identifier expected but [EOL] found",
