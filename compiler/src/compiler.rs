@@ -54,35 +54,36 @@ pub fn compile(stmts: &[StmtAst]) -> Result<Asm, String> {
                     proc.name
                 ))
             }
-            StmtAst::VarDecl(var, init_expr) => {
+            StmtAst::VarDecl(var_ident, init_expr) => {
                 compile_expr(init_expr, &mut context, &mut dat, &mut txt)?;
+
                 txt.inst("pop rax");
                 txt.inst(format!(
                     "mov qword[rsp+{}], rax  ; intialize {}",
                     context.current_var_index * 8,
-                    var.name
+                    var_ident.name
                 ));
                 context
                     .var_mappings
-                    .insert(var.name.clone(), context.current_var_index);
+                    .insert(var_ident.name.clone(), context.current_var_index);
                 context.current_var_index += 1;
             }
-            StmtAst::VarAssign(var, expr) => {
+            StmtAst::VarAssign(var_ident, expr) => {
                 let current_context = context.clone();
-                if let Some(var_index) = current_context.var_mappings.get(&var.name) {
+                if let Some(var_index) = current_context.var_mappings.get(&var_ident.name) {
                     compile_expr(expr, &mut context, &mut dat, &mut txt)?;
                     txt.inst("pop rax");
                     txt.inst(format!(
                         "mov qword[rsp+{}], rax  ; update {}",
                         var_index * 8,
-                        var.name
+                        var_ident.name
                     ));
                 } else {
                     return Err(format!(
                         "{} ({}) `{}` is not declared",
                         COMPILE_ERROR.as_str(),
-                        var.locate(),
-                        var.name
+                        var_ident.locate(),
+                        var_ident.name
                     ));
                 }
             }
@@ -147,16 +148,16 @@ fn compile_expr(
             context.current_dat_index += 1;
             Ok(())
         }
-        ExprAst::Ident(ident) => {
-            if let Some(var_index) = context.var_mappings.get(&ident.name) {
+        ExprAst::Ident(var_ident) => {
+            if let Some(var_index) = context.var_mappings.get(&var_ident.name) {
                 txt.inst(format!("push qword[rbp+{}]", var_index * 8));
                 Ok(())
             } else {
                 Err(format!(
                     "{} ({}) {} is not defined",
                     COMPILE_ERROR.as_str(),
-                    ident.locate(),
-                    ident.name
+                    var_ident.locate(),
+                    var_ident.name
                 ))
             }
         }
