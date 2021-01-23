@@ -6,6 +6,8 @@ use once_cell::sync::Lazy;
 
 static SYNTAX_ERROR: Lazy<String> = Lazy::new(|| red_bold("Syntax error:"));
 
+static RESERVED_WORDS: [&'static str; 2] = ["PRINT", "VAR"];
+
 pub fn parse(tokens: &[Token]) -> Result<Vec<StmtAst>, String> {
     let mut tokens = tokens;
     let mut stmts = Vec::<StmtAst>::new();
@@ -28,26 +30,30 @@ pub fn parse(tokens: &[Token]) -> Result<Vec<StmtAst>, String> {
 
         match tokens.first() {
             Some(Token::Ident(ident)) if ident.name == "VAR" => match tokens.get(1) {
-                Some(Token::Ident(var_ident)) => match tokens.get(2) {
-                    Some(Token::Equal(_)) => {
-                        let (expr, rest) = parse_expr(&tokens[3..])?;
-                        stmts.push(StmtAst::VarDecl(var_ident.clone(), expr));
-                        expect_eol(&rest)?;
-                        tokens = rest;
-                    }
-                    Some(token) => {
-                        return Err(format!(
-                            "{} ({}) `=` expected but {:?} found",
-                            SYNTAX_ERROR.as_str(),
-                            token.locate(),
-                            token
-                        ));
-                    }
-                    None => {
-                        return Err(format!(
-                            "{} `=` expected but [EOF] found",
-                            SYNTAX_ERROR.as_str()
-                        ));
+                Some(Token::Ident(var_ident)) => {
+                    validate_var_ident(&var_ident)?;
+
+                    match tokens.get(2) {
+                        Some(Token::Equal(_)) => {
+                            let (expr, rest) = parse_expr(&tokens[3..])?;
+                            stmts.push(StmtAst::VarDecl(var_ident.clone(), expr));
+                            expect_eol(&rest)?;
+                            tokens = rest;
+                        }
+                        Some(token) => {
+                            return Err(format!(
+                                "{} ({}) `=` expected but {:?} found",
+                                SYNTAX_ERROR.as_str(),
+                                token.locate(),
+                                token
+                            ));
+                        }
+                        None => {
+                            return Err(format!(
+                                "{} `=` expected but [EOF] found",
+                                SYNTAX_ERROR.as_str()
+                            ));
+                        }
                     }
                 },
                 Some(Token::LineBreak(line_break)) => {
@@ -116,6 +122,8 @@ fn parse_var_assign<'a>(
     ident: &Identifier,
     tokens: &'a [Token],
 ) -> Result<(StmtAst, &'a [Token]), String> {
+    validate_var_ident(&ident)?;
+
     match tokens.first() {
         Some(Token::Equal(_)) => {
             let (expr_ast, rest) = parse_expr(&tokens[1..])?;
@@ -169,7 +177,11 @@ fn parse_argument_list(tokens: &[Token]) -> Result<(Vec<ExprAst>, &[Token]), Str
 fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
     match tokens.first() {
         Some(Token::StrLit(str_lit)) => Ok((ExprAst::StrLit(str_lit.clone()), &tokens[1..])),
-        Some(Token::Ident(ident)) => Ok((ExprAst::Ident(ident.clone()), &tokens[1..])),
+        Some(Token::Ident(ident)) => {
+            validate_var_ident(&ident)?;
+
+            Ok((ExprAst::Ident(ident.clone()), &tokens[1..]))
+        }
         Some(token) => Err(format!(
             "{} ({}) Expression expected but {:?} found",
             SYNTAX_ERROR.as_str(),
@@ -180,5 +192,18 @@ fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
             "{} Expression expected but [EOF] found",
             SYNTAX_ERROR.as_str()
         )),
+    }
+}
+
+fn validate_var_ident(var_ident: &Identifier) -> Result<(), String> {
+    if RESERVED_WORDS.contains(&var_ident.name.as_str()) {
+        Err(format!(
+            "{} ({}) `{}` is not allowed as a variable name",
+            SYNTAX_ERROR.as_str(),
+            var_ident.locate(),
+            var_ident.name
+        ))
+    } else {
+        Ok(())
     }
 }
