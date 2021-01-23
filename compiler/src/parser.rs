@@ -59,13 +59,17 @@ pub fn parse(tokens: &[Token]) -> Result<Vec<StmtAst>, String> {
                 }
                 Some(token) => {
                     return Err(format!(
-                        "{} ({}) Unexpected token",
+                        "{} ({}) Identifier expected but {:?} found",
                         SYNTAX_ERROR.as_str(),
-                        token.locate()
+                        token.locate(),
+                        token
                     ));
                 }
                 None => {
-                    return Err(format!("{} Unexpected end of file", SYNTAX_ERROR.as_str()));
+                    return Err(format!(
+                        "{} Identifier expected but [EOF] found",
+                        SYNTAX_ERROR.as_str()
+                    ));
                 }
             },
             Some(Token::Ident(ident)) => {
@@ -79,9 +83,10 @@ pub fn parse(tokens: &[Token]) -> Result<Vec<StmtAst>, String> {
             Some(head) => {
                 println!("{:?}", head);
                 return Err(format!(
-                    "{} ({}) Expected identifier",
+                    "{} ({}) Identifier expected but {:?} found",
                     SYNTAX_ERROR.as_str(),
-                    head.locate()
+                    head.locate(),
+                    head
                 ));
             }
             None => {
@@ -111,24 +116,22 @@ fn parse_var_assign<'a>(
     ident: &Identifier,
     tokens: &'a [Token],
 ) -> Result<(StmtAst, &'a [Token]), String> {
-    if let Some(head) = tokens.first() {
-        match head {
-            Token::Equal(_) => {
-                let (expr_ast, rest) = parse_expr(&tokens[1..])?;
-                Ok((StmtAst::VarAssign(ident.clone(), expr_ast), rest))
-            }
-            _ => Err(format!(
-                "{} ({}) Expected `=`",
-                SYNTAX_ERROR.as_str(),
-                head.locate()
-            )),
+    match tokens.first() {
+        Some(Token::Equal(_)) => {
+            let (expr_ast, rest) = parse_expr(&tokens[1..])?;
+            Ok((StmtAst::VarAssign(ident.clone(), expr_ast), rest))
         }
-    } else {
-        Err(format!(
-            "{} ({}) Unexpected end of line",
+        Some(token) => Err(format!(
+            "{} ({}) `=` expected but {:?} found",
+            SYNTAX_ERROR.as_str(),
+            token.locate(),
+            token
+        )),
+        None => Err(format!(
+            "{} ({}) `=` expected but [EOF] found",
             SYNTAX_ERROR.as_str(),
             ident.locate().end
-        ))
+        )),
     }
 }
 
@@ -164,17 +167,18 @@ fn parse_argument_list(tokens: &[Token]) -> Result<(Vec<ExprAst>, &[Token]), Str
 }
 
 fn parse_expr(tokens: &[Token]) -> Result<(ExprAst, &[Token]), String> {
-    if let Some(head) = tokens.first() {
-        match head {
-            Token::StrLit(str_lit) => Ok((ExprAst::StrLit(str_lit.clone()), &tokens[1..])),
-            Token::Ident(ident) => Ok((ExprAst::Ident(ident.clone()), &tokens[1..])),
-            _ => Err(format!(
-                "{} ({}) Expected expression",
-                SYNTAX_ERROR.as_str(),
-                head.locate()
-            )),
-        }
-    } else {
-        Err(format!("{} Unexpected end of line", SYNTAX_ERROR.as_str()))
+    match tokens.first() {
+        Some(Token::StrLit(str_lit)) => Ok((ExprAst::StrLit(str_lit.clone()), &tokens[1..])),
+        Some(Token::Ident(ident)) => Ok((ExprAst::Ident(ident.clone()), &tokens[1..])),
+        Some(token) => Err(format!(
+            "{} ({}) Expression expected but {:?} found",
+            SYNTAX_ERROR.as_str(),
+            token.locate(),
+            token
+        )),
+        None => Err(format!(
+            "{} Expression expected but [EOF] found",
+            SYNTAX_ERROR.as_str()
+        )),
     }
 }

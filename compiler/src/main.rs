@@ -9,39 +9,29 @@ use std::{
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
-    let first_arg = args.get(1).expect("Please specify a source file");
+    let first_arg = args.get(1).unwrap_or_else(|| {
+        eprintln!("Please specify a source file");
+        process::exit(1)
+    });
 
     let (input_info, output_info) = get_io_info(first_arg)?;
-    let content = fs::read_to_string(input_info.src_path).expect("Failed to read the source file");
+    let content = fs::read_to_string(input_info.src_path).unwrap_or_else(|_| {
+        eprintln!("Failed to read the source file");
+        process::exit(1);
+    });
 
-    let stmts = match tokenize(&content) {
-        Ok(tokens) => match parse(&tokens) {
-            Ok(stmts) => stmts,
-            Err(msg) => {
-                eprintln!("{}", msg);
-                process::exit(1);
-            }
-        },
-        Err(msg) => {
-            eprintln!("{}", msg);
-            process::exit(1);
-        }
-    };
+    let tokens = unwrap_or_else_terminate(tokenize(&content));
+
+    let stmts = unwrap_or_else_terminate(parse(&tokens));
 
     fs::write(
         output_info.ast_path,
         serde_json::to_string_pretty(&stmts).unwrap() + "\n",
     )?;
 
-    match compile(&stmts) {
-        Ok(asm) => {
-            fs::write(&output_info.asm_path, asm.stringify())?;
-        }
-        Err(msg) => {
-            eprintln!("{}", msg);
-            process::exit(1);
-        }
-    }
+    let asm = unwrap_or_else_terminate(compile(&stmts));
+
+    fs::write(&output_info.asm_path, asm.stringify())?;
 
     let status = Command::new("nasm")
         .args(&["-f", "elf64", output_info.asm_path.to_str().unwrap()])
@@ -64,6 +54,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+fn unwrap_or_else_terminate<T>(res: Result<T, String>) -> T {
+    res.unwrap_or_else(|msg| {
+        eprintln!("{}", msg);
+        process::exit(1);
+    })
 }
 
 struct InputInfo {
