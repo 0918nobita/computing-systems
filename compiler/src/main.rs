@@ -20,16 +20,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         process::exit(1);
     });
 
-    let tokens = unwrap_or_else_terminate(tokenize(&content));
+    let tokens = tokenize(&content).unwrap_or_else_terminate();
 
-    let stmts = unwrap_or_else_terminate(parse(&tokens));
+    let ast = parse(&tokens).unwrap_or_else_terminate();
 
     fs::write(
         output_info.ast_path,
-        serde_json::to_string_pretty(&stmts).unwrap() + "\n",
+        serde_json::to_string_pretty(&ast).unwrap() + "\n",
     )?;
 
-    let asm = unwrap_or_else_terminate(gen_asm(&stmts));
+    let asm = gen_asm(&ast).unwrap_or_else_terminate();
 
     fs::write(&output_info.asm_path, asm.stringify())?;
 
@@ -56,11 +56,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn unwrap_or_else_terminate<T>(res: Result<T, String>) -> T {
-    res.unwrap_or_else(|msg| {
-        eprintln!("{}", msg);
-        process::exit(1);
-    })
+trait ResultExt<T> {
+    fn unwrap_or_else_terminate(self) -> T;
+}
+
+impl<T> ResultExt<T> for Result<T, String> {
+    fn unwrap_or_else_terminate(self) -> T {
+        self.unwrap_or_else(|msg| {
+            eprintln!("{}", msg);
+            process::exit(1);
+        })
+    }
 }
 
 struct InputInfo {
