@@ -13,11 +13,13 @@ _start:
     mov rax, 12  ; sys_brk
     syscall
 
+    pop rax
     mov byte[rax],   0x41
     mov byte[rax+1], 0x42
     mov byte[rax+2], 0x43
     mov byte[rax+3], 0x0A
     mov byte[rax+4], 0x00
+    push rax
     mov rdi, rax
     call printString
 
