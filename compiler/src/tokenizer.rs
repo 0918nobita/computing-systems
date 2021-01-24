@@ -36,16 +36,13 @@ pub fn tokenize(line: &str) -> Result<Vec<Token>, String> {
         if c == '\n' {
             try_tokenizing_ident(&mut tokens, &mut state, line_number, column_number - 1);
 
-            match state {
-                TokenizerState::StringLiteral(_) => {
-                    return Err(format!(
-                        "{} ({}:{}) Unexpected [EOL] in string literal",
-                        TOKENIZATION_ERROR.as_str(),
-                        line_number,
-                        column_number
-                    ));
-                }
-                _ => (),
+            if let TokenizerState::StringLiteral(_) = state {
+                return Err(format!(
+                    "{} ({}:{}) Unexpected [EOL] in string literal",
+                    TOKENIZATION_ERROR.as_str(),
+                    line_number,
+                    column_number
+                ));
             }
 
             tokens.push(Token::LineBreak(LineBreak {
@@ -57,30 +54,27 @@ pub fn tokenize(line: &str) -> Result<Vec<Token>, String> {
             continue;
         }
 
-        match state {
-            TokenizerState::StringLiteral(StrLitState { start, ref acc }) => {
-                if c == '"' {
-                    let location = Location {
-                        start: Point::new(line_number, start),
-                        end: Point::new(line_number, column_number),
-                    };
-                    tokens.push(Token::StrLit(StringLiteral {
-                        value: acc.clone(),
-                        location,
-                    }));
-                    column_number += 1;
-                    state = TokenizerState::Ready;
-                    continue;
-                }
-
-                state = TokenizerState::StringLiteral(StrLitState {
-                    start,
-                    acc: format!("{}{}", acc, c),
-                });
+        if let TokenizerState::StringLiteral(StrLitState { start, ref acc }) = state {
+            if c == '"' {
+                let location = Location {
+                    start: Point::new(line_number, start),
+                    end: Point::new(line_number, column_number),
+                };
+                tokens.push(Token::StrLit(StringLiteral {
+                    value: acc.clone(),
+                    location,
+                }));
                 column_number += 1;
+                state = TokenizerState::Ready;
                 continue;
             }
-            _ => (),
+
+            state = TokenizerState::StringLiteral(StrLitState {
+                start,
+                acc: format!("{}{}", acc, c),
+            });
+            column_number += 1;
+            continue;
         }
 
         if c.is_whitespace() {
@@ -105,34 +99,28 @@ pub fn tokenize(line: &str) -> Result<Vec<Token>, String> {
                 loc: Point::new(line_number, column_number),
             }));
         } else {
-            match state {
-                TokenizerState::Identifier(IdentState { start, ref acc }) => {
-                    let acc = format!("{}{}", acc, c);
-                    state = TokenizerState::Identifier(IdentState { start, acc })
-                }
-                _ => {
-                    let acc = c.to_string();
-                    state = TokenizerState::Identifier(IdentState {
-                        start: column_number,
-                        acc,
-                    })
-                }
+            if let TokenizerState::Identifier(IdentState { start, ref acc }) = state {
+                let acc = format!("{}{}", acc, c);
+                state = TokenizerState::Identifier(IdentState { start, acc })
+            } else {
+                let acc = c.to_string();
+                state = TokenizerState::Identifier(IdentState {
+                    start: column_number,
+                    acc,
+                })
             }
         }
 
         if i == len - 1 {
             try_tokenizing_ident(&mut tokens, &mut state, line_number, column_number);
 
-            match state {
-                TokenizerState::StringLiteral(_) => {
-                    return Err(format!(
-                        "{} ({}:{}) Unexpected end of line",
-                        TOKENIZATION_ERROR.as_str(),
-                        line_number,
-                        column_number
-                    ));
-                }
-                _ => (),
+            if let TokenizerState::StringLiteral(_) = state {
+                return Err(format!(
+                    "{} ({}:{}) Unexpected end of line",
+                    TOKENIZATION_ERROR.as_str(),
+                    line_number,
+                    column_number
+                ));
             }
         }
 
@@ -148,18 +136,15 @@ fn try_tokenizing_ident(
     line: i32,
     column: i32,
 ) {
-    match state {
-        TokenizerState::Identifier(IdentState { start, ref acc }) => {
-            let location = Location {
-                start: Point::new(line, *start),
-                end: Point::new(line, column),
-            };
-            tokens.push(Token::Ident(Identifier {
-                name: acc.clone(),
-                location,
-            }));
-            *state = TokenizerState::Ready;
-        }
-        _ => (),
+    if let TokenizerState::Identifier(IdentState { start, ref acc }) = state {
+        let location = Location {
+            start: Point::new(line, *start),
+            end: Point::new(line, column),
+        };
+        tokens.push(Token::Ident(Identifier {
+            name: acc.clone(),
+            location,
+        }));
+        *state = TokenizerState::Ready;
     }
 }

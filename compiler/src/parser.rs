@@ -6,7 +6,7 @@ use once_cell::sync::Lazy;
 
 static SYNTAX_ERROR: Lazy<String> = Lazy::new(|| red_bold("Syntax error:"));
 
-static RESERVED_WORDS: [&'static str; 2] = ["PRINT", "VAR"];
+static RESERVED_WORDS: [&str; 2] = ["PRINT", "VAR"];
 
 pub fn parse(tokens: &[Token]) -> Result<Vec<StmtAst>, String> {
     let mut tokens = tokens;
