@@ -1,104 +1,48 @@
 use super::asm::{Asm, DataSection, TextSection};
-use super::ast::{ExprAst, StmtAst};
-use super::location::Locatable;
-use super::term_color::red_bold;
-use once_cell::sync::Lazy;
+use super::ir::{Ir, IrInst};
 use std::collections::HashMap;
 
-static COMPILE_ERROR: Lazy<String> = Lazy::new(|| red_bold("Compile error:"));
-
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct CodegenContext {
     current_dat_index: i32,
     current_var_index: i32,
     var_mappings: HashMap<String, i32>,
 }
 
-pub fn gen_asm(stmts: &[StmtAst]) -> Result<Asm, String> {
+pub fn gen_asm(ir: &Ir) -> Result<Asm, String> {
+    let max_stack_size = ir.num_globals * 8;
+
     let mut dat = DataSection::default();
     let mut txt = TextSection::default();
 
-    let mut context = CodegenContext {
-        current_dat_index: 0,
-        current_var_index: 0,
-        var_mappings: HashMap::new(),
-    };
+    for (i, static_str) in ir.string_pool.iter().enumerate() {
+        dat.append(format!("str{}", i), "db", format!("'{}', 0", static_str));
+    }
 
-    for stmt in stmts.iter() {
-        match stmt {
-            StmtAst::ProcCall(proc, args) if proc.name == "PRINT" => {
-                if args.len() > 1 {
-                    return Err(format!(
-                        "{} ({}) Too many arguments",
-                        COMPILE_ERROR.as_str(),
-                        proc.locate()
-                    ));
-                }
-                if let Some(head) = args.first() {
-                    codegen_expr(head, &mut context, &mut dat, &mut txt)?;
-                    txt.inst("pop rdi");
-                    txt.inst("call printString");
-                } else {
-                    return Err(format!(
-                        "{} ({}) Too few arguments",
-                        COMPILE_ERROR.as_str(),
-                        proc.locate()
-                    ));
-                }
-            }
-            StmtAst::ProcCall(proc, _) => {
-                return Err(format!(
-                    "{} ({}) Unknown procedure `{}`",
-                    COMPILE_ERROR.as_str(),
-                    proc.locate(),
-                    proc.name
-                ))
-            }
-            StmtAst::VarDecl(var_ident, init_expr) => {
-                codegen_expr(init_expr, &mut context, &mut dat, &mut txt)?;
+    txt.label("_start");
+    txt.inst(format!("sub rsp, {}", max_stack_size));
+    txt.inst("mov rbp, rsp");
 
+    for ir_inst in ir.insts.iter() {
+        match ir_inst {
+            IrInst::GetStaticStr(index) => {
+                txt.inst(format!("push str{}", index));
+            }
+            IrInst::GetGlobal(index) => {
+                txt.inst(format!("push qword[rbp+{}]", index * 8));
+            }
+            IrInst::SetGlobal(index) => {
                 txt.inst("pop rax");
-                txt.inst(format!(
-                    "mov qword[rsp+{}], rax  ; intialize {}",
-                    context.current_var_index * 8,
-                    var_ident.name
-                ));
-                context
-                    .var_mappings
-                    .insert(var_ident.name.clone(), context.current_var_index);
-                context.current_var_index += 1;
+                txt.inst(format!("mov qword[rbp+{}], rax", index * 8));
             }
-            StmtAst::VarAssign(var_ident, expr) => {
-                let current_context = context.clone();
-                if let Some(var_index) = current_context.var_mappings.get(&var_ident.name) {
-                    codegen_expr(expr, &mut context, &mut dat, &mut txt)?;
-
-                    txt.inst("pop rax");
-                    txt.inst(format!(
-                        "mov qword[rsp+{}], rax  ; update {}",
-                        var_index * 8,
-                        var_ident.name
-                    ));
-                } else {
-                    return Err(format!(
-                        "{} ({}) `{}` is not declared",
-                        COMPILE_ERROR.as_str(),
-                        var_ident.locate(),
-                        var_ident.name
-                    ));
-                }
+            IrInst::Print => {
+                txt.inst("pop rdi");
+                txt.inst("call printString");
             }
         }
     }
 
-    let mut new_txt = TextSection::default();
-    new_txt.label("_start");
-    new_txt.inst(format!("sub rsp, {}", context.current_var_index * 8));
-    new_txt.inst("mov rbp, rsp");
-    new_txt.extend(txt);
-    txt = new_txt;
-
-    txt.inst(format!("add rsp, {}", context.current_var_index * 8));
+    txt.inst(format!("add rsp, {}", max_stack_size));
 
     // exit
     txt.inst("mov rax, 60");
@@ -130,37 +74,4 @@ pub fn gen_asm(stmts: &[StmtAst]) -> Result<Asm, String> {
         data: dat,
         text: txt,
     })
-}
-
-fn codegen_expr(
-    expr_ast: &ExprAst,
-    context: &mut CodegenContext,
-    dat: &mut DataSection,
-    txt: &mut TextSection,
-) -> Result<(), String> {
-    match expr_ast {
-        ExprAst::StrLit(str_lit) => {
-            dat.append(
-                format!("dat{}", context.current_dat_index),
-                "db",
-                format!("'{}', 0", str_lit.value),
-            );
-            txt.inst(format!("push dat{}", context.current_dat_index));
-            context.current_dat_index += 1;
-            Ok(())
-        }
-        ExprAst::Ident(var_ident) => {
-            if let Some(var_index) = context.var_mappings.get(&var_ident.name) {
-                txt.inst(format!("push qword[rbp+{}]", var_index * 8));
-                Ok(())
-            } else {
-                Err(format!(
-                    "{} ({}) {} is not defined",
-                    COMPILE_ERROR.as_str(),
-                    var_ident.locate(),
-                    var_ident.name
-                ))
-            }
-        }
-    }
 }
