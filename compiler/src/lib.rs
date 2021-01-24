@@ -1,8 +1,10 @@
 mod asm;
 pub mod ast;
 pub mod codegen;
+mod ir;
 mod location;
 pub mod parser;
+pub mod sem_analysis;
 mod term_color;
 mod token;
 pub mod tokenizer;
