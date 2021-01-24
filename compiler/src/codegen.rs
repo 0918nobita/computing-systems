@@ -1,13 +1,5 @@
 use super::asm::{Asm, DataSection, TextSection};
 use super::ir::{Ir, IrInst};
-use std::collections::HashMap;
-
-#[derive(Clone, Default)]
-struct CodegenContext {
-    current_dat_index: i32,
-    current_var_index: i32,
-    var_mappings: HashMap<String, i32>,
-}
 
 pub fn gen_asm(ir: &Ir) -> Result<Asm, String> {
     let max_stack_size = ir.num_globals * 8;
