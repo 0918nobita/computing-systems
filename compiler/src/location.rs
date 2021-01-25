@@ -1,6 +1,7 @@
 use serde::Serialize;
 use std::fmt;
 
+/// ソースコード上の1文字の位置を指す
 #[derive(Clone, Copy, Serialize)]
 pub struct Point {
     line: i32,
@@ -29,6 +30,7 @@ impl fmt::Display for Point {
     }
 }
 
+/// ソースコード上の位置 ( ``Point`` 2つで表される範囲) を指す
 #[derive(Clone, Copy, Serialize)]
 pub struct Location {
     pub start: Point,
@@ -47,6 +49,7 @@ impl fmt::Display for Location {
     }
 }
 
+/// 位置を特定できる
 pub trait Locatable {
     fn locate(&self) -> Location;
 }

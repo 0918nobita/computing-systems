@@ -97,7 +97,9 @@ impl Locatable for LineBreak {
 
 #[derive(Debug)]
 pub enum Token {
+    /// 識別子
     Ident(Identifier),
+    /// 文字列リテラル
     StrLit(StringLiteral),
     Comma(Comma),
     Equal(Equal),

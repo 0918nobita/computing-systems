@@ -2,6 +2,7 @@ use super::location::{Locatable, Location};
 use super::token::{Identifier, StringLiteral};
 use serde::Serialize;
 
+/// 式の抽象構文木
 #[derive(Debug, Serialize)]
 pub enum ExprAst {
     Ident(Identifier),
@@ -17,6 +18,7 @@ impl Locatable for ExprAst {
     }
 }
 
+/// 文の抽象構文木
 #[derive(Debug, Serialize)]
 pub enum StmtAst {
     VarDecl(Identifier, ExprAst),

@@ -6,13 +6,16 @@ use super::token::Identifier;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 
+/// セマンティックエラーのメッセージのプレフィックス
 static SEMANTIC_ERROR: Lazy<String> = Lazy::new(|| red_bold("Semantic error:"));
 
+/// 中間表現を生成する際に扱う状態
 #[derive(Clone, Default)]
 struct Context {
     var_mappings: HashMap<String, i32>,
 }
 
+/// 抽象構文木を意味解析して、中間表現を生成する
 pub fn sem_analysis(stmts: &[StmtAst]) -> Result<Ir, String> {
     let mut context = Context::default();
     let mut ir = Ir::default();

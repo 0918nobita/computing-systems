@@ -4,6 +4,7 @@ pub struct DataSectionItem {
     values: String,
 }
 
+/// データセクションの内部表現
 #[derive(Default)]
 pub struct DataSection {
     items: Vec<DataSectionItem>,
@@ -29,6 +30,7 @@ pub enum TextSectionItem {
     Instruction(String),
 }
 
+/// テキストセクションの内部表現
 #[derive(Default)]
 pub struct TextSection {
     items: Vec<TextSectionItem>,
@@ -48,12 +50,14 @@ impl TextSection {
     }
 }
 
+/// アセンブリの内部表現
 pub struct Asm {
     pub data: DataSection,
     pub text: TextSection,
 }
 
 impl Asm {
+    /// 出力の ``.s`` (アセンブリ) ファイルに書き込まれる文字列を生成する
     pub fn stringify(&self) -> String {
         let mut result = String::from("bits 64\nglobal _start\n\nsection .data\n");
         for item in self.data.items.iter() {

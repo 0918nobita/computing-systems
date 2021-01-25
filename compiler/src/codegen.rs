@@ -1,6 +1,7 @@
 use super::asm::{Asm, DataSection, TextSection};
 use super::ir::{Ir, IrInst};
 
+/// 中間表現からアセンブリの内部表現を生成する
 pub fn gen_asm(ir: &Ir) -> Result<Asm, String> {
     let max_stack_size = ir.num_globals * 8;
 
@@ -34,6 +35,7 @@ pub fn gen_asm(ir: &Ir) -> Result<Asm, String> {
         }
     }
 
+    // スタックを実行前の状態に戻す
     txt.inst(format!("add rsp, {}", max_stack_size));
 
     // exit

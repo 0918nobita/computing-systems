@@ -4,10 +4,13 @@ use super::term_color::red_bold;
 use super::token::{Identifier, Token};
 use once_cell::sync::Lazy;
 
+/// シンタックスエラーのメッセージのプレフィックス
 static SYNTAX_ERROR: Lazy<String> = Lazy::new(|| red_bold("Syntax error:"));
 
+/// 予約語リスト
 static RESERVED_WORDS: [&str; 2] = ["PRINT", "VAR"];
 
+/// トークン列を元に抽象構文木を生成する
 pub fn parse(tokens: &[Token]) -> Result<Vec<StmtAst>, String> {
     let mut tokens = tokens;
     let mut stmts = Vec::<StmtAst>::new();
