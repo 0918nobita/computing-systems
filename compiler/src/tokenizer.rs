@@ -24,15 +24,15 @@ struct StrLitState {
 
 static TOKENIZATION_ERROR: Lazy<String> = Lazy::new(|| red_bold("Tokenization error:"));
 
-pub fn tokenize(line: &str) -> Result<Vec<Token>, String> {
-    let len = line.len();
+pub fn tokenize(src: &str) -> Result<Vec<Token>, String> {
+    let len = src.len();
 
     let mut tokens = Vec::<Token>::new();
     let mut state = TokenizerState::Ready;
     let mut line_number = 0;
     let mut column_number = 0;
 
-    for (i, c) in line.chars().enumerate() {
+    for (i, c) in src.chars().enumerate() {
         if c == '\n' {
             try_tokenizing_ident(&mut tokens, &mut state, line_number, column_number - 1);
 
