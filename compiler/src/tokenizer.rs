@@ -98,17 +98,15 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>, String> {
             tokens.push(Token::Equal(Equal {
                 loc: Point::new(line_number, column_number),
             }));
+        } else if let TokenizerState::Identifier(IdentState { start, ref acc }) = state {
+            let acc = format!("{}{}", acc, c);
+            state = TokenizerState::Identifier(IdentState { start, acc })
         } else {
-            if let TokenizerState::Identifier(IdentState { start, ref acc }) = state {
-                let acc = format!("{}{}", acc, c);
-                state = TokenizerState::Identifier(IdentState { start, acc })
-            } else {
-                let acc = c.to_string();
-                state = TokenizerState::Identifier(IdentState {
-                    start: column_number,
-                    acc,
-                })
-            }
+            let acc = c.to_string();
+            state = TokenizerState::Identifier(IdentState {
+                start: column_number,
+                acc,
+            })
         }
 
         if i == len - 1 {

@@ -61,7 +61,7 @@ pub fn get_io_info<F: Into<PathBuf>>(filename: F) -> Result<IOInfo, String> {
     })
 }
 
-pub fn compile(src: &String) -> Result<String, String> {
+pub fn compile(src: &str) -> Result<String, String> {
     let tokens = tokenize(src)?;
     let ast = parse(&tokens)?;
     let ir = sem_analysis(&ast)?;
