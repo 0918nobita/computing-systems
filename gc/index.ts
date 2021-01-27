@@ -2,71 +2,70 @@
 // BASIC では __GC_COLLECT 手続き呼び出しで GC を強制実行できるようにする予定
 // Copying GC または Lisp2 (Mark&Compact) GC
 
+const TYPE_BYTE = 1;
+const SIZE_BYTE = 2;
+
+const TYPE_CHAR = 2;
+const SIZE_CHAR = 2;
+
+const TYPE_PTR = 3;
+const SIZE_PTR = 2;
+
+type Type =
+  | typeof TYPE_BYTE
+  | typeof TYPE_CHAR
+  | typeof TYPE_PTR;
+
 const heap = new Uint8Array(200);
 
-const stack = [];
+const stack: number[] = [];
 
 let toSpace = 100;
 let fromSpace = 0;
 
-heap[0] =  5;  // next
-heap[1] =  1;  // used
-heap[2] =  2;  // size
-heap[3] =  1;  // type: char
-heap[4] = 65;  // value: 'A'
+heap[0] = 0;  // next: null
+heap[1] = 0;  // forwarding-pointer
+heap[2] = 2;  // size
+heap[3] = TYPE_BYTE;
+heap[4] = 0;  // value
 
-heap[5] = 10;  // next
-heap[6] =  0;  // used
-heap[7] =  2;  // size
-heap[8] =  0;
-heap[9] =  0;
-
-heap[10] =  0;  // next (null)
-heap[11] =  1;  // used
-heap[12] =  2;  // size
-heap[13] =  1;  // type: char
-heap[14] = 66;  // value: 'B'
-
-function malloc(size: number): number {
+function allocate(size: number, type: Type): number {
   let ptr = fromSpace;
+
   while (true) {
     const next = heap[ptr];
-    const used = heap[ptr+1];
-    const cellSize = heap[ptr+2];
-    if (!used && size <= cellSize) {
-      heap[ptr+1] = 1; // used
-      heap[ptr+2] = size;
-      for (let i = 0; i < size; i++) heap[ptr+3+i] = 0;
-      break;
-    }
+
     if (next === 0) {
-      heap[ptr] = ptr + cellSize + 3;
-      ptr += cellSize + 3;
-      const next = ptr + size + 3;
-      if (next > toSpace) collect();
-      if (next > toSpace) throw new Error('insufficient memory');
-      heap[ptr] = next
-      heap[ptr+1] = 1; // used
-      heap[ptr+2] = size;
-      for (let i = 0; i < size; i++) heap[ptr+3+i] = 0;
-      heap[next] = 0; // null
-      break;
+      const cellSize = heap[ptr+2];
+      const newPtr = ptr + cellSize + 3;
+      if (newPtr + size + 3 > fromSpace + 100) collect();
+      heap[ptr]      = newPtr;
+      heap[newPtr]   = 0;       // next: null
+      heap[newPtr+1] = newPtr;  // forwarding-pointer
+      heap[newPtr+2] = size;
+      heap[newPtr+3] = type;
+      for (let i = 0; i < size; i++) heap[newPtr+4+i] = 0;
+      return newPtr + 4;
     }
+
     ptr = next;
   }
-  return ptr;
 }
 
-function free() {
+function collect(): void {
   // wip
 }
 
-function collect() {
-  // wip
-}
+const ptrA = allocate(SIZE_CHAR, TYPE_CHAR);
+heap[ptrA] = 65;  // will not be marked
 
-console.log('malloc(10) =>', malloc(10));
-console.log('malloc(2) =>', malloc(2));
-console.log('malloc(20) =>', malloc(20));
-console.log('malloc(2) =>', malloc(2));
-console.log('heap:', heap);
+const ptrB = allocate(SIZE_CHAR, TYPE_CHAR);
+heap[ptrB] = 66;  // will be marked
+stack.push(ptrB);
+stack.push(TYPE_PTR);
+
+console.log('stack:', stack);
+console.log('heap (first half):', heap.slice(0, 100));
+console.log('heap (second half):', heap.slice(100));
+
+collect();
