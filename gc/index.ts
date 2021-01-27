@@ -53,7 +53,16 @@ function allocate(size: number, type: Type): number {
 }
 
 function collect(): void {
-  // wip
+  let i = stack.length - 1;
+  while (i >= 0) {
+    const type = stack[i] as Type;
+    i -= 1;
+    const value = stack[i];
+    if (type === TYPE_PTR) {
+      console.log('Pointer found', value);
+    }
+    i -= 1;
+  }
 }
 
 const ptrA = allocate(SIZE_CHAR, TYPE_CHAR);
