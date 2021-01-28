@@ -1,0 +1,16 @@
+{
+  "name": "magazine",
+  "description": "magazine",
+  "version": "0.0.0",
+  "author": "0918nobita <nobita.0918@gmail.com>",
+  "scripts": {
+    "build": "vivliostyle build",
+    "preview": "vivliostyle preview"
+  },
+  "dependencies": {
+    "@vivliostyle/cli": "next",
+    "@vivliostyle/theme-techbook": "^0.2.0"
+  },
+  "license": "MIT",
+  "private": true
+}
