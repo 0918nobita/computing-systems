@@ -1,5 +1,5 @@
 module.exports = {
-  title: 'BASIC言語を作ろう',
+  title: 'Rustで作るBASIC言語コンパイラ',
   author: '松本　幸大',
   language: 'ja',
   size: 'B5',
