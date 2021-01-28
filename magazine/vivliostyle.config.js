@@ -2,7 +2,7 @@ module.exports = {
   title: 'BASIC言語を作ろう',
   author: '松本　幸大',
   language: 'ja',
-  size: 'A4',
+  size: 'B5',
   theme: '@vivliostyle/theme-techbook', // .css or local dir or npm package. default to undefined.
   entryContext: './manuscripts',
   entry: [
