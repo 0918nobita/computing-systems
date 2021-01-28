@@ -8,6 +8,7 @@ module.exports = {
   entry: [
     '0-preface.md', // `title` is automatically guessed from the file (frontmatter > first heading).
     '1-plan.md',
+    '2-first-compiler.md',
     // {
     //   path: 'epigraph.md',
     //   title: 'Epigraph', // title can be overwritten (entry > file),
