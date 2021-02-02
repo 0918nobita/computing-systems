@@ -1,7 +1,17 @@
-pub struct DataSectionItem {
-    name: String,
-    size: String,
-    values: String,
+pub enum DataSectionItem {
+    Data {
+        name: String,
+        size: String,
+        values: String,
+    },
+    DefineMacro {
+        name: String,
+        replacement: String,
+    },
+    StrlenMacro {
+        name: String,
+        str: String,
+    },
 }
 
 /// データセクションの内部表現
@@ -17,10 +27,32 @@ impl DataSection {
         S: Into<String>,
         V: Into<String>,
     {
-        self.items.push(DataSectionItem {
+        self.items.push(DataSectionItem::Data {
             name: name.into(),
             size: size.into(),
             values: values.into(),
+        });
+    }
+
+    pub fn define<N, R>(&mut self, name: N, replacement: R)
+    where
+        N: Into<String>,
+        R: Into<String>,
+    {
+        self.items.push(DataSectionItem::DefineMacro {
+            name: name.into(),
+            replacement: replacement.into(),
+        });
+    }
+
+    pub fn strlen<N, S>(&mut self, name: N, str: S)
+    where
+        N: Into<String>,
+        S: Into<String>,
+    {
+        self.items.push(DataSectionItem::StrlenMacro {
+            name: name.into(),
+            str: str.into(),
         });
     }
 }
@@ -73,7 +105,17 @@ impl Asm {
         result.push_str("    err_msg db ERR_MSG\n");
 
         for item in self.data.items.iter() {
-            result.push_str(format!("    {} {} {}\n", item.name, item.size, item.values).as_str());
+            match item {
+                DataSectionItem::Data { name, size, values } => {
+                    result.push_str(format!("    {} {} {}\n", name, size, values).as_str());
+                }
+                DataSectionItem::DefineMacro { name, replacement } => {
+                    result.push_str(format!("    %define {} {}\n", name, replacement).as_str());
+                }
+                DataSectionItem::StrlenMacro { name, str } => {
+                    result.push_str(format!("    %strlen {} {}\n", name, str).as_str());
+                }
+            }
         }
 
         result.push_str("\nsection .text\n");
