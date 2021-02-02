@@ -24,6 +24,7 @@ struct StrLitState {
 
 static TOKENIZATION_ERROR: Lazy<String> = Lazy::new(|| red_bold("Tokenization error:"));
 
+/// ソースコード文字列を元にトークン列を生成する
 pub fn tokenize(src: &str) -> Result<Vec<Token>, String> {
     let len = src.len();
 
