@@ -59,11 +59,25 @@ pub struct Asm {
 impl Asm {
     /// 出力の ``.s`` (アセンブリ) ファイルに書き込まれる文字列を生成する
     pub fn stringify(&self) -> String {
-        let mut result = String::from("bits 64\nglobal _start\n\n%define TYPE_STR 1\n\nsection .data\n");
+        let mut result = String::from("bits 64\n");
+        result.push_str("global _start\n\n");
+        result.push_str("%define ERR_MSG 'Type Error', 0\n");
+        result.push_str("%strlen ERR_MSG_CNT ERR_MSG\n\n");
+        result.push_str("%define EXIT_FAILURE 1\n\n");
+        result.push_str("%define FD_STDOUT 1\n");
+        result.push_str("%define FD_STDERR 2\n\n");
+        result.push_str("%define SYS_EXIT 60\n");
+        result.push_str("%define SYS_WRITE 1\n\n");
+        result.push_str("%define TYPE_STR 1\n\n");
+        result.push_str("section .data\n");
+        result.push_str("    err_msg db ERR_MSG\n");
+
         for item in self.data.items.iter() {
             result.push_str(format!("    {} {} {}\n", item.name, item.size, item.values).as_str());
         }
+
         result.push_str("\nsection .text\n");
+
         for item in self.text.items.iter() {
             match item {
                 TextSectionItem::Label(label_name) => {
@@ -74,6 +88,7 @@ impl Asm {
                 }
             }
         }
+
         result
     }
 }

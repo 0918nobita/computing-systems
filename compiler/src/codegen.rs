@@ -32,9 +32,11 @@ pub fn gen_asm(ir: &Ir) -> Result<Asm, String> {
                 txt.inst(format!("mov qword[rbp+{}], rax", index * 8));
             }
             IrInst::Print => {
-                txt.inst("add rsp, 8");
+                txt.inst("pop rax");
+                txt.inst("cmp rax, TYPE_STR");
+                txt.inst("jnz type_error");
                 txt.inst("pop rdi");
-                txt.inst("call printString");
+                txt.inst("call print_string");
             }
         }
     }
@@ -43,22 +45,22 @@ pub fn gen_asm(ir: &Ir) -> Result<Asm, String> {
     txt.inst(format!("add rsp, {}", max_stack_size));
 
     // exit
-    txt.inst("mov rax, 60");
-    txt.inst("xor rdi, rdi");
+    txt.inst("mov rax, SYS_EXIT");
+    txt.inst("xor rdi, rdi  ; exit code");
     txt.inst("syscall");
 
-    // printString
-    txt.label("printString");
-    txt.inst("call stringLength");
-    txt.inst("mov rdx, rax");
-    txt.inst("mov rax, 1");
-    txt.inst("mov rsi, rdi");
-    txt.inst("mov rdi, 1");
+    // print_string
+    txt.label("print_string");
+    txt.inst("call string_length");
+    txt.inst("mov rdx, rax  ; length");
+    txt.inst("mov rax, SYS_WRITE");
+    txt.inst("mov rsi, rdi  ; address");
+    txt.inst("mov rdi, FD_STDOUT");
     txt.inst("syscall");
     txt.inst("ret");
 
-    // stringLength
-    txt.label("stringLength");
+    // string_length
+    txt.label("string_length");
     txt.inst("xor rax, rax");
     txt.label(".loop");
     txt.inst("cmp byte[rdi+rax], 0");
@@ -67,6 +69,17 @@ pub fn gen_asm(ir: &Ir) -> Result<Asm, String> {
     txt.inst("jmp .loop");
     txt.label(".end");
     txt.inst("ret");
+
+    // type_error
+    txt.label("type_error");
+    txt.inst("mov rax, SYS_WRITE");
+    txt.inst("mov rdi, FD_STDERR");
+    txt.inst("mov rsi, err_msg");
+    txt.inst("mov rdx, ERR_MSG_CNT");
+    txt.inst("syscall");
+    txt.inst("mov rax, SYS_EXIT");
+    txt.inst("mov rdi, EXIT_FAILURE");
+    txt.inst("syscall");
 
     Ok(Asm {
         data: dat,
