@@ -20,15 +20,19 @@ pub fn gen_asm(ir: &Ir) -> Result<Asm, String> {
         match ir_inst {
             IrInst::GetStaticStr(index) => {
                 txt.inst(format!("push str{}", index));
+                txt.inst("push TYPE_STR");
             }
             IrInst::GetGlobal(index) => {
                 txt.inst(format!("push qword[rbp+{}]", index * 8));
+                txt.inst("push TYPE_STR");
             }
             IrInst::SetGlobal(index) => {
+                txt.inst("add rsp, 8");
                 txt.inst("pop rax");
                 txt.inst(format!("mov qword[rbp+{}], rax", index * 8));
             }
             IrInst::Print => {
+                txt.inst("add rsp, 8");
                 txt.inst("pop rdi");
                 txt.inst("call printString");
             }

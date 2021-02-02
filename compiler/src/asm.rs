@@ -59,7 +59,7 @@ pub struct Asm {
 impl Asm {
     /// 出力の ``.s`` (アセンブリ) ファイルに書き込まれる文字列を生成する
     pub fn stringify(&self) -> String {
-        let mut result = String::from("bits 64\nglobal _start\n\nsection .data\n");
+        let mut result = String::from("bits 64\nglobal _start\n\n%define TYPE_STR 1\n\nsection .data\n");
         for item in self.data.items.iter() {
             result.push_str(format!("    {} {} {}\n", item.name, item.size, item.values).as_str());
         }
