@@ -2,7 +2,10 @@
 
 ## Target
 
-x86-64 Linux
+| Path | Target |
+| --- | --- |
+| `./*.s`, `./concat-strs`, `./print-int`, `./string-length` | Linux x86-64 |
+| `./macos` | macOS x86-64 |
 
 ## Requirements
 
