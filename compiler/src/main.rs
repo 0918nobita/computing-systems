@@ -11,6 +11,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         panic!("This operating system is not supported.");
     }
 
+    if cfg!(not(target_arch = "x86_64")) {
+        panic!("This architecture is not supported.");
+    }
+
     let args: Vec<String> = env::args().collect();
 
     let first_arg = args.get(1).unwrap_or_else(|| {
@@ -68,7 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_arch = "x86_64", target_os = "linux"))]
 fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
     let mut args = vec!["-f", "elf64"];
     args.extend(rest_args);
@@ -78,7 +82,7 @@ fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
     cmd
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(all(target_arch = "x86_64", target_os = "macos"))]
 fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
     let mut args = vec!["-f", "macho64"];
     args.extend(rest_args);
@@ -88,7 +92,7 @@ fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
     cmd
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(target_arch = "x86_64", target_os = "linux"))]
 fn get_ld_cmd(rest_args: Vec<&str>) -> Command {
     let mut args = Vec::<&str>::new();
     args.extend(rest_args);
@@ -98,7 +102,7 @@ fn get_ld_cmd(rest_args: Vec<&str>) -> Command {
     cmd
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(all(target_arch = "x86_64", target_os = "macos"))]
 fn get_ld_cmd(rest_args: Vec<&str>) -> Command {
     let mut args = vec!["-lSystem"];
     args.extend(rest_args);
