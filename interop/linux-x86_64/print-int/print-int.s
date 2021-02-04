@@ -1,5 +1,3 @@
-; nasm -f elf64 print-char.s
-
 bits 64
 global printInt
 
