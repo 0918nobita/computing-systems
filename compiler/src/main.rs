@@ -7,6 +7,10 @@ use std::{
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    if cfg!(not(any(target_os = "linux", target_os = "macos"))) {
+        panic!("This operating system is not supported.");
+    }
+
     let args: Vec<String> = env::args().collect();
 
     let first_arg = args.get(1).unwrap_or_else(|| {
