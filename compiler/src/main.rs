@@ -31,25 +31,75 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     fs::write(&output_info.asm_path, asm_output)?;
 
-    let status = Command::new("nasm")
-        .args(&["-f", "elf64", output_info.asm_path.to_str().unwrap()])
-        .status()?;
+    let mut nasm_cmd = get_nasm_cmd(vec![output_info.asm_path.to_str().unwrap()]);
+
+    let status = nasm_cmd.status().unwrap_or_else(|err| {
+        eprintln!("{}", err);
+        eprintln!("Unable to find `nasm`, perhaps install NASM and set PATH");
+        process::exit(1);
+    });
+
     if !status.success() {
         eprintln!("Error occurs while executing `nasm`");
         process::exit(1);
     }
 
-    let status = Command::new("ld")
-        .args(&[
-            "-o",
-            output_info.bin_path.to_str().unwrap(),
-            output_info.obj_path.to_str().unwrap(),
-        ])
-        .status()?;
+    let mut ld_cmd = get_ld_cmd(vec![
+        "-o",
+        output_info.bin_path.to_str().unwrap(),
+        output_info.obj_path.to_str().unwrap(),
+    ]);
+
+    let status = ld_cmd.status().unwrap_or_else(|err| {
+        eprintln!("{}", err);
+        eprintln!("Unable to find `ld`, perhaps install Linker and set PATH");
+        process::exit(1);
+    });
+
     if !status.success() {
         eprintln!("Error occurs while executing `ld`");
         process::exit(1);
     }
 
     Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
+    let mut args = vec!["-f", "elf64"];
+    args.extend(rest_args);
+
+    let mut cmd = Command::new("nasm");
+    cmd.args(args);
+    cmd
+}
+
+#[cfg(target_os = "macos")]
+fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
+    let mut args = vec!["-f", "macho64"];
+    args.extend(rest_args);
+
+    let mut cmd = Command::new("nasm");
+    cmd.args(args);
+    cmd
+}
+
+#[cfg(target_os = "linux")]
+fn get_ld_cmd(rest_args: Vec<&str>) -> Command {
+    let mut args = Vec::<&str>::new();
+    args.extend(rest_args);
+
+    let mut cmd = Command::new("ld");
+    cmd.args(args);
+    cmd
+}
+
+#[cfg(target_os = "macos")]
+fn get_ld_cmd(rest_args: Vec<&str>) -> Command {
+    let mut args = vec!["-lSystem"];
+    args.extend(rest_args);
+
+    let mut cmd = Command::new("ld");
+    cmd.args(args);
+    cmd
 }
