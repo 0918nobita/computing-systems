@@ -72,6 +72,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+fn get_nasm_cmd(_: Vec<&str>) -> Command {
+    unreachable!();
+}
+
 #[cfg(all(target_arch = "x86_64", target_os = "linux"))]
 fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
     let mut args = vec!["-f", "elf64"];
@@ -90,6 +95,11 @@ fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
     let mut cmd = Command::new("nasm");
     cmd.args(args);
     cmd
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+fn get_ld_cmd(_: Vec<&str>) -> Command {
+    unreachable!();
 }
 
 #[cfg(all(target_arch = "x86_64", target_os = "linux"))]
