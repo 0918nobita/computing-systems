@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "compiler",
+    "emulator",
     "t2b",
 ]
