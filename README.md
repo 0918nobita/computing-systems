@@ -14,3 +14,4 @@
 | `/llvm` | Sample programs written in LLVM IR |
 | `/magazine` | Tech magazine about BASIC language compiler implementation |
 | `/t2b` | Text to binary converter |
+| `/wasm` | Sample programs written in WebAssembly |
