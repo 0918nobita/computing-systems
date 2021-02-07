@@ -2,7 +2,7 @@
 
 ## Target
 
-x86-64 Linux
+x86_64 Linux
 
 ## Requirements
 

@@ -1,8 +1,4 @@
-# BASIC
-
-(WIP) Language implementation in Rust
-
-## Directory Structure
+# Compiler
 
 | Path | Description |
 | --- | --- |

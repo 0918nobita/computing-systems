@@ -1,6 +1,6 @@
 # Sample programs written in BASIC
 
-With the BASIC language compiler included in this repository (`/compiler`), you can compile these programs into executable files for x86-64 Linux.
+With the BASIC language compiler included in this repository (`/compiler`), you can compile these programs into executable files for x86_64 Linux.
 
 ## Requirements
 

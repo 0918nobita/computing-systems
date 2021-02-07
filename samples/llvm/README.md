@@ -1,9 +1,5 @@
 # Sample programs written in LLVM IR
 
-## Target
-
-x86-64 Linux
-
 ## Requirements
 
 - gcc
