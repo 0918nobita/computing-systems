@@ -1,36 +1,27 @@
 extern crate compiler;
 
-use compiler::{compile, get_io_info, IOInfo};
+use compiler::{compile, get_io_info, term_color::red_bold, IOInfo};
 use std::{
     env, fs,
     process::{self, Command},
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    if cfg!(not(any(target_os = "linux", target_os = "macos"))) {
-        panic!("This operating system is not supported.");
-    }
-
-    if cfg!(not(target_arch = "x86_64")) {
-        panic!("This architecture is not supported.");
-    }
+    check_platform();
 
     let args: Vec<String> = env::args().collect();
 
-    let first_arg = args.get(1).unwrap_or_else(|| {
-        eprintln!("Please specify a source file");
-        process::exit(1)
-    });
+    let first_arg = args
+        .get(1)
+        .unwrap_or_else(|| exit_failure("Please specify a source file"));
 
     let IOInfo {
         input: input_info,
         output: output_info,
     } = get_io_info(first_arg)?;
 
-    let content = fs::read_to_string(input_info.src_path).unwrap_or_else(|_| {
-        eprintln!("Failed to read the source file");
-        process::exit(1);
-    });
+    let content = fs::read_to_string(input_info.src_path)
+        .unwrap_or_else(|_| exit_failure("Failed to read the source file"));
 
     let asm_output = compile(&content).unwrap_or_else(|msg| {
         eprintln!("{}", msg);
@@ -43,13 +34,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let status = nasm_cmd.status().unwrap_or_else(|err| {
         eprintln!("{}", err);
-        eprintln!("Unable to find `nasm`, perhaps install NASM and set PATH");
+        eprintln!(
+            "{}",
+            red_bold("Unable to find `nasm`, perhaps install NASM and set PATH")
+        );
         process::exit(1);
     });
 
     if !status.success() {
-        eprintln!("Error occurs while executing `nasm`");
-        process::exit(1);
+        exit_failure("Error occurs while executing `nasm`");
     }
 
     let mut ld_cmd = get_ld_cmd(vec![
@@ -60,16 +53,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let status = ld_cmd.status().unwrap_or_else(|err| {
         eprintln!("{}", err);
-        eprintln!("Unable to find `ld`, perhaps install Linker and set PATH");
+        eprintln!(
+            "{}",
+            red_bold("Unable to find `ld`, perhaps install Linker and set PATH")
+        );
         process::exit(1);
     });
 
     if !status.success() {
-        eprintln!("Error occurs while executing `ld`");
-        process::exit(1);
+        exit_failure("Error occurs while executing `ld`");
     }
 
     Ok(())
+}
+
+fn check_platform() {
+    if cfg!(not(any(target_os = "linux", target_os = "macos"))) {
+        exit_failure("This operating system is not supported");
+    }
+
+    if cfg!(not(target_arch = "x86_64")) {
+        exit_failure("This architecture is not supported.");
+    }
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "macos")))]
@@ -120,4 +125,9 @@ fn get_ld_cmd(rest_args: Vec<&str>) -> Command {
     let mut cmd = Command::new("ld");
     cmd.args(args);
     cmd
+}
+
+fn exit_failure(msg: &str) -> ! {
+    eprintln!("{}", red_bold(msg));
+    process::exit(1);
 }
