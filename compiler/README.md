@@ -13,8 +13,8 @@ x86-64 Linux
 ## Usage
 
 ```bash
-cargo run -- ../basic/hello.bas  # outputs ../basic/hello.bin
-../basic/hello.bin  # => Hello, world!
+cargo run -- ../samples/basic/hello.bas  # outputs ../basic/hello.bin
+../samples/basic/hello.bin  # => Hello, world!
 ```
 
 ## Build
