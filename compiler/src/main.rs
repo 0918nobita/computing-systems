@@ -1,13 +1,14 @@
 extern crate compiler;
 
-use compiler::{compile, get_io_info, term_color::red_bold, IOInfo};
+use compiler::{compile, get_io_info, term_color::red_bold, IOInfo, Target};
 use std::{
     env, fs,
     process::{self, Command},
 };
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    check_platform();
+    let target = get_target().unwrap_or_default();
+    println!("Target: {:?}", target);
 
     let args: Vec<String> = env::args().collect();
 
@@ -67,22 +68,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn check_platform() {
-    if cfg!(not(any(target_os = "linux", target_os = "macos"))) {
-        exit_failure("This operating system is not supported");
-    }
-
-    if cfg!(not(target_arch = "x86_64")) {
-        exit_failure("This architecture is not supported.");
+fn get_target() -> Option<Target> {
+    if cfg!(all(target_arch = "x86_64", target_os = "linux")) {
+        Some(Target::LinuxX64)
+    } else if cfg!(all(target_arch = "x86_64", target_os = "macos")) {
+        Some(Target::MacX64)
+    } else {
+        None
     }
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "macos")))]
-fn get_nasm_cmd(_: Vec<&str>) -> Command {
-    unreachable!();
-}
-
-#[cfg(all(target_arch = "x86_64", target_os = "linux"))]
 fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
     let mut args = vec!["-f", "elf64"];
     args.extend(rest_args);
@@ -92,34 +87,8 @@ fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
     cmd
 }
 
-#[cfg(all(target_arch = "x86_64", target_os = "macos"))]
-fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
-    let mut args = vec!["-f", "macho64"];
-    args.extend(rest_args);
-
-    let mut cmd = Command::new("nasm");
-    cmd.args(args);
-    cmd
-}
-
-#[cfg(not(any(target_os = "linux", target_os = "macos")))]
-fn get_ld_cmd(_: Vec<&str>) -> Command {
-    unreachable!();
-}
-
-#[cfg(all(target_arch = "x86_64", target_os = "linux"))]
 fn get_ld_cmd(rest_args: Vec<&str>) -> Command {
     let mut args = Vec::<&str>::new();
-    args.extend(rest_args);
-
-    let mut cmd = Command::new("ld");
-    cmd.args(args);
-    cmd
-}
-
-#[cfg(all(target_arch = "x86_64", target_os = "macos"))]
-fn get_ld_cmd(rest_args: Vec<&str>) -> Command {
-    let mut args = vec!["-lSystem"];
     args.extend(rest_args);
 
     let mut cmd = Command::new("ld");

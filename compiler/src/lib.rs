@@ -12,7 +12,7 @@ pub mod tokenizer;
 use codegen::gen_asm;
 use parser::parse;
 use sem_analysis::sem_analysis;
-use std::path::PathBuf;
+use std::{fmt, path::PathBuf};
 use tokenizer::tokenize;
 
 pub struct IOInfo {
@@ -67,4 +67,25 @@ pub fn compile(src: &str) -> Result<String, String> {
     let ir = sem_analysis(&ast)?;
     let asm = gen_asm(&ir)?;
     Ok(asm.stringify())
+}
+
+pub enum Target {
+    LinuxX64,
+    MacX64,
+}
+
+impl Default for Target {
+    fn default() -> Self {
+        Target::LinuxX64
+    }
+}
+
+impl fmt::Debug for Target {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let str = match self {
+            Target::LinuxX64 => "Linux x86_64",
+            Target::MacX64 => "macOS x86_64",
+        };
+        write!(f, "{}", str)
+    }
 }
