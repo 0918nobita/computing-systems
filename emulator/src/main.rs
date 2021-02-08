@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::{collections::HashMap, env, fs};
 
 #[derive(Default)]
 struct Emulator {
@@ -51,6 +51,10 @@ impl Emulator {
     }
 }
 
+type Instruction = fn(&mut Emulator) -> ();
+
+type InstructionTable = HashMap<u8, Instruction>;
+
 static MEMORY_SIZE: u32 = 1024 * 1024; // 1MiB
 
 fn main() {
@@ -64,10 +68,12 @@ fn main() {
     emu.dump_registers();
     println!("Memory[0..=5]: {:?}", &emu.memory[0..=5]);
 
-    while emu.eip < MEMORY_SIZE {
-        let _code = emu.read_code_u8(0);
+    let insts: InstructionTable = HashMap::new();
 
-        // TODO: 関数ポインタテーブルを参照して、code と対応する命令を実行する
+    while emu.eip < MEMORY_SIZE {
+        let code = emu.read_code_u8(0);
+        let inst = insts.get(&code).expect("Unknown instruction");
+        inst(&mut emu);
 
         if emu.eip == 0x00_00_00_00 {
             println!("end of program");
