@@ -1,4 +1,4 @@
-use std::fs;
+use std::{env, fs};
 
 #[derive(Default)]
 struct Emulator {
@@ -43,16 +43,19 @@ impl Emulator {
 }
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    let filename = args.get(1).expect("Please specify a source file");
+
     let mut emu = Emulator::new(1024 * 1024 /* 1MiB */, 0x0000, 0x7c00);
 
-    load_binary(&mut emu);
+    load_binary(&mut emu, filename);
 
     emu.dump_registers();
     println!("Memory[0..=5]: {:?}", &emu.memory[0..=5]);
 }
 
-fn load_binary(emu: &mut Emulator) {
-    if let Ok(content) = fs::read("input.bin") {
+fn load_binary(emu: &mut Emulator, filename: &str) {
+    if let Ok(content) = fs::read(filename) {
         for (i, b) in content.iter().enumerate() {
             emu.memory[i] = *b;
         }
