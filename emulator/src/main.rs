@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env, fs};
+use std::{collections::HashMap, convert::TryFrom, env, fs};
 
 #[derive(Default)]
 struct Emulator {
@@ -45,9 +45,21 @@ impl Emulator {
         self.memory[(self.eip + displacement) as usize]
     }
 
-    #[allow(dead_code)]
     fn read_code_i8(&self, displacement: u32) -> i8 {
         self.memory[(self.eip + displacement) as usize] as i8
+    }
+
+    fn run(&mut self, insts: &InstructionTable) {
+        while self.eip < MEMORY_SIZE {
+            let code = self.read_code_u8(0);
+            let inst = insts.get(&code).expect("Unknown instruction");
+            inst(self);
+
+            if self.eip == 0x00_00_00_00 {
+                println!("end of program");
+                break;
+            }
+        }
     }
 }
 
@@ -68,18 +80,8 @@ fn main() {
     emu.dump_registers();
     println!("Memory[0..=5]: {:?}", &emu.memory[0..=5]);
 
-    let insts: InstructionTable = HashMap::new();
-
-    while emu.eip < MEMORY_SIZE {
-        let code = emu.read_code_u8(0);
-        let inst = insts.get(&code).expect("Unknown instruction");
-        inst(&mut emu);
-
-        if emu.eip == 0x00_00_00_00 {
-            println!("end of program");
-            break;
-        }
-    }
+    let insts = get_inst_table();
+    emu.run(&insts);
 }
 
 fn load_binary(emu: &mut Emulator, filename: &str) {
@@ -88,4 +90,30 @@ fn load_binary(emu: &mut Emulator, filename: &str) {
     for (i, b) in content.iter().enumerate() {
         emu.memory[i] = *b;
     }
+}
+
+fn get_inst_table() -> InstructionTable {
+    let mut insts: InstructionTable = HashMap::new();
+
+    insts.insert(0xff, |emu| {
+        println!("inc");
+        // TODO: implement `inc` instruction
+        emu.eip += 3;
+    });
+
+    insts.insert(0xeb, |emu| {
+        println!("short_jmp");
+        let diff = emu.read_code_i8(1);
+        emu.eip += 2;
+        if diff > 0 {
+            emu.eip += u32::try_from(diff).unwrap();
+        } else if diff < 0 {
+            emu.eip = emu
+                .eip
+                .checked_sub(u32::try_from(diff * (-1)).unwrap())
+                .expect("Failed to jump");
+        }
+    });
+
+    insts
 }
