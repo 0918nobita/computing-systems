@@ -82,10 +82,10 @@ impl Default for Target {
 
 impl fmt::Debug for Target {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let str = match self {
+        let target_name = match self {
             Target::LinuxX64 => "Linux x86_64",
             Target::MacX64 => "macOS x86_64",
         };
-        write!(f, "{}", str)
+        write!(f, "{}", target_name)
     }
 }

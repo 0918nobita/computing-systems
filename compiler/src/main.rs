@@ -31,7 +31,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     fs::write(&output_info.asm_path, asm_output)?;
 
-    let mut nasm_cmd = get_nasm_cmd(vec![output_info.asm_path.to_str().unwrap()]);
+    let mut nasm_cmd = Command::new("nasm");
+    nasm_cmd.args(&["-f", "elf64", output_info.asm_path.to_str().unwrap()]);
 
     let status = nasm_cmd.status().unwrap_or_else(|err| {
         eprintln!("{}", err);
@@ -46,7 +47,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         exit_failure("Error occurs while executing `nasm`");
     }
 
-    let mut ld_cmd = get_ld_cmd(vec![
+    let mut ld_cmd = Command::new("ld");
+    ld_cmd.args(&[
         "-o",
         output_info.bin_path.to_str().unwrap(),
         output_info.obj_path.to_str().unwrap(),
@@ -76,24 +78,6 @@ fn get_target() -> Option<Target> {
     } else {
         None
     }
-}
-
-fn get_nasm_cmd(rest_args: Vec<&str>) -> Command {
-    let mut args = vec!["-f", "elf64"];
-    args.extend(rest_args);
-
-    let mut cmd = Command::new("nasm");
-    cmd.args(args);
-    cmd
-}
-
-fn get_ld_cmd(rest_args: Vec<&str>) -> Command {
-    let mut args = Vec::<&str>::new();
-    args.extend(rest_args);
-
-    let mut cmd = Command::new("ld");
-    cmd.args(args);
-    cmd
 }
 
 fn exit_failure(msg: &str) -> ! {
