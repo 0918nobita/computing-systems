@@ -20,11 +20,11 @@ struct Emulator {
 }
 
 impl Emulator {
-    fn new(size: usize, eip: u32, esp: u32) -> Self {
+    fn new(size: u32, eip: u32, esp: u32) -> Self {
         let mut emu = Emulator::default();
         emu.eip = eip;
         emu.esp = esp;
-        emu.memory.resize_with(size, Default::default);
+        emu.memory.resize_with(size as usize, Default::default);
         emu
     }
 
@@ -40,18 +40,40 @@ impl Emulator {
         println!("EIP = {}", self.eip);
         println!("EFLAGS = {}", self.eflags);
     }
+
+    fn read_code_u8(&self, displacement: u32) -> u8 {
+        self.memory[(self.eip + displacement) as usize]
+    }
+
+    #[allow(dead_code)]
+    fn read_code_i8(&self, displacement: u32) -> i8 {
+        self.memory[(self.eip + displacement) as usize] as i8
+    }
 }
+
+static MEMORY_SIZE: u32 = 1024 * 1024; // 1MiB
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let filename = args.get(1).expect("Please specify a source file");
 
-    let mut emu = Emulator::new(1024 * 1024 /* 1MiB */, 0x0000, 0x7c00);
+    let mut emu = Emulator::new(MEMORY_SIZE, 0x00_00_00_00, 0x00_00_7c_00);
 
     load_binary(&mut emu, filename);
 
     emu.dump_registers();
     println!("Memory[0..=5]: {:?}", &emu.memory[0..=5]);
+
+    while emu.eip < MEMORY_SIZE {
+        let _code = emu.read_code_u8(0);
+
+        // TODO: 関数ポインタテーブルを参照して、code と対応する命令を実行する
+
+        if emu.eip == 0x00_00_00_00 {
+            println!("end of program");
+            break;
+        }
+    }
 }
 
 fn load_binary(emu: &mut Emulator, filename: &str) {

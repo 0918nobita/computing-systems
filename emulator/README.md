@@ -1,5 +1,10 @@
 # x86エミュレータ
 
+```bash
+make
+cargo run -- ./input.bin
+```
+
 ## インクリメント専用の inc 命令
 
 ```text
