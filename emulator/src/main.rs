@@ -55,11 +55,9 @@ fn main() {
 }
 
 fn load_binary(emu: &mut Emulator, filename: &str) {
-    if let Ok(content) = fs::read(filename) {
-        for (i, b) in content.iter().enumerate() {
-            emu.memory[i] = *b;
-        }
-    } else {
-        panic!("Unable to open input.bin")
+    let content = fs::read(filename).expect("Unable to open the source file");
+
+    for (i, b) in content.iter().enumerate() {
+        emu.memory[i] = *b;
     }
 }
