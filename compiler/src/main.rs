@@ -1,23 +1,36 @@
 extern crate compiler;
 
-use clap::Clap;
+use clap::{app_from_crate, Arg};
 use compiler::{compile, get_io_info, term_color::red_bold, IOInfo, Target};
 use std::{
     fs,
     process::{self, Command},
 };
 
-/// BASIC language compiler
-#[derive(Clap, Debug)]
-#[clap(version = "0.1.0", author = "Kodai Matsumoto <nobita.0918@gmail.com>")]
 struct Options {
-    /// Output verbose messages on internal operations
-    #[clap(long)]
     verbose: bool,
-
-    /// Source file
-    #[clap(value_name = "INPUT")]
     input: String,
+}
+
+impl Options {
+    fn parse() -> Self {
+        let matches = app_from_crate!()
+            .arg(Arg::new("INPUT").about("Source file").required(true))
+            .arg(
+                Arg::new("verbose")
+                    .long("verbose")
+                    .about("Output verbose messages on internal operations"),
+            )
+            .get_matches();
+
+        let input = matches.value_of("INPUT").unwrap();
+        let verbose = matches.is_present("verbose");
+
+        Options {
+            verbose,
+            input: input.to_owned(),
+        }
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

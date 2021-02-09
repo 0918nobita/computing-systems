@@ -3,6 +3,7 @@ name = "compiler"
 version = "0.1.0"
 authors = ["0918nobita <nobita.0918@gmail.com>"]
 edition = "2018"
+description = "BASIC language compiler"
 
 [dependencies]
 once_cell = "1.5"
