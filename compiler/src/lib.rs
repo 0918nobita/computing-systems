@@ -81,8 +81,8 @@ impl Options {
                 Arg::new("target")
                     .long("target")
                     .takes_value(true)
-                    .possible_values(&["x86_64-linux", "x86_64-darwin"])
-                    .default_value("x86_64-linux")
+                    .possible_values(&["x86_64-linux", "x86_64-darwin", "dotnet"])
+                    .default_value(&Target::default().to_string())
                     .about("Builds for the target triple"),
             )
             .get_matches();
@@ -110,10 +110,23 @@ pub fn compile(src: &str) -> Result<String, String> {
 pub enum Target {
     X64Darwin,
     X64Linux,
+    Dotnet,
 }
 
 #[derive(Debug)]
 pub struct InvalidTargetError;
+
+impl Default for Target {
+    fn default() -> Self {
+        if cfg!(all(target_arch = "x86_64", target_os = "linux")) {
+            Target::X64Linux
+        } else if cfg!(all(target_arch = "x86_64", target_os = "macos")) {
+            Target::X64Darwin
+        } else {
+            Target::Dotnet
+        }
+    }
+}
 
 impl str::FromStr for Target {
     type Err = InvalidTargetError;
@@ -134,6 +147,7 @@ impl fmt::Display for Target {
         let target_name = match self {
             Target::X64Linux => "x86_64-linux",
             Target::X64Darwin => "x86_64-darwin",
+            Target::Dotnet => "dotnet",
         };
         write!(f, "{}", target_name)
     }
