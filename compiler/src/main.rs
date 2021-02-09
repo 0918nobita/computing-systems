@@ -1,25 +1,30 @@
 extern crate compiler;
 
+use clap::Clap;
 use compiler::{compile, get_io_info, term_color::red_bold, IOInfo, Target};
 use std::{
-    env, fs,
+    fs,
     process::{self, Command},
 };
 
+/// BASIC language compiler
+#[derive(Clap, Debug)]
+#[clap(version = "0.1.0", author = "Kodai Matsumoto <nobita.0918@gmail.com>")]
+struct Options {
+    /// source file
+    input: String,
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let opts: Options = Options::parse();
+
     let target = get_target().unwrap_or_default();
     println!("Target: {:?}", target);
-
-    let args: Vec<String> = env::args().collect();
-
-    let first_arg = args
-        .get(1)
-        .unwrap_or_else(|| exit_failure("Please specify a source file"));
 
     let IOInfo {
         input: input_info,
         output: output_info,
-    } = get_io_info(first_arg)?;
+    } = get_io_info(opts.input)?;
 
     let content = fs::read_to_string(input_info.src_path)
         .unwrap_or_else(|_| exit_failure("Failed to read the source file"));
