@@ -11,7 +11,12 @@ use std::{
 #[derive(Clap, Debug)]
 #[clap(version = "0.1.0", author = "Kodai Matsumoto <nobita.0918@gmail.com>")]
 struct Options {
-    /// source file
+    /// Output verbose messages on internal operations
+    #[clap(long)]
+    verbose: bool,
+
+    /// Source file
+    #[clap(value_name = "INPUT")]
     input: String,
 }
 
@@ -19,7 +24,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opts: Options = Options::parse();
 
     let target = get_target().unwrap_or_default();
-    println!("Target: {:?}", target);
+    if opts.verbose {
+        println!("Target: {:?}", target)
+    }
 
     let IOInfo {
         input: input_info,
