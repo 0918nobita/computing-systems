@@ -1,6 +1,9 @@
+/* Multiplexor */
+
 CHIP Mux {
     IN a, b, sel;
     OUT out;
+
     PARTS:
     Not(in=sel, out=w1);
     And(a=a, b=w1, out=w2);

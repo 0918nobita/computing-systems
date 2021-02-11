@@ -1,6 +1,7 @@
 CHIP Or {
     IN a, b;
     OUT out;
+
     PARTS:
     Not(in=a, out=w1);
     Not(in=b, out=w2);
