@@ -1,5 +1,8 @@
 all: hello.vvp $(patsubst %.v, %.vvp, $(wildcard ./*_test.v))
 
+.PHONY: tests
+tests: and_test or_test
+
 hello.vvp: hello.v
 	iverilog -o hello.vvp hello.v
 
