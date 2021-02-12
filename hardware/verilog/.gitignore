@@ -1,0 +1,4 @@
+# VCD (Value Change Dump) 波形ファイル
+*.vcd
+# シミュレーションオブジェクト
+*.vvp
