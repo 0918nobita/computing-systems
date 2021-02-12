@@ -6,7 +6,7 @@ OR or_instance(a, b, out);
 
 initial begin
     $dumpfile("or_test.vcd");
-    $dumpvars(0, ORTEST);
+    $dumpvars(1, ORTEST);
 
         a = 0; b = 0;
     #10 a = 1;
