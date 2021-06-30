@@ -1,3 +1,5 @@
+manuscripts/themes
+manuscripts/*.html
 .vivliostyle
 node_modules
 *.pdf

@@ -1,0 +1,37 @@
+{
+  "@context": [
+    "https://schema.org",
+    "https://www.w3.org/ns/pub-context"
+  ],
+  "type": "Book",
+  "conformsTo": "https://github.com/vivliostyle/vivliostyle-cli",
+  "author": "松本　幸大",
+  "inLanguage": "ja",
+  "name": "Rustで作るBASIC言語コンパイラ",
+  "readingOrder": [
+    {
+      "url": "index.html",
+      "title": "Table of Contents",
+      "rel": "contents",
+      "type": "LinkedResource"
+    },
+    {
+      "url": "0-preface.html",
+      "title": "はじめに"
+    },
+    {
+      "url": "1-plan.html",
+      "title": "学習・実装の計画を立てる"
+    },
+    {
+      "url": "2-first-compiler.html",
+      "title": "最初のコンパイラを作る"
+    },
+    {
+      "url": "3-references.html",
+      "title": "参考文献"
+    }
+  ],
+  "resources": [],
+  "links": []
+}
