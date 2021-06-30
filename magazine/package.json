@@ -1,7 +1,9 @@
 {
+  "private": true,
   "name": "magazine",
   "version": "0.1.0",
   "author": "0918nobita <nobita.0918@gmail.com>",
+  "license": "MIT",
   "scripts": {
     "build": "vivliostyle build",
     "preview": "vivliostyle preview"
@@ -10,6 +12,7 @@
     "@vivliostyle/cli": "^3.5.0",
     "@vivliostyle/theme-techbook": "^0.3.1"
   },
-  "license": "MIT",
-  "private": true
+  "resolutions": {
+    "prismjs": "1.24.0"
+  }
 }

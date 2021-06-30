@@ -7,6 +7,7 @@
   "conformsTo": "https://github.com/vivliostyle/vivliostyle-cli",
   "author": "松本　幸大",
   "inLanguage": "ja",
+  "dateModified": "2021-06-30T10:22:52.873Z",
   "name": "Rustで作るBASIC言語コンパイラ",
   "readingOrder": [
     {
