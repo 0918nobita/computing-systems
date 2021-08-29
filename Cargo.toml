@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "compiler",
-    "emulator",
+    "archives/compiler",
+    "archives/emulator",
     "t2b",
 ]
