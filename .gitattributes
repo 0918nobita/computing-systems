@@ -1,2 +1,4 @@
-*.bas linguist-language=Text
+archives/** linguist-documentation
+*.cmp linguist-language=Text
+*.hdl linguist-language=Text
 *.tst linguist-language=Text
