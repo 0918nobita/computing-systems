@@ -4,6 +4,6 @@ module AND16(out, a, b);
 
     genvar i;
     for (i = 0; i < 16; i = i + 1) begin
-        assign out[i] = a[i] & b[i];
+        AND and_instance(out[i], a[i], b[i]);
     end
 endmodule

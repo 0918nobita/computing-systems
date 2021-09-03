@@ -2,7 +2,7 @@ module ORTEST;
     reg a, b;
     wire out;
 
-    OR or_instance(a, b, out);
+    OR or_instance(out, a, b);
 
     initial begin
         $dumpfile("or_test.vcd");

@@ -3,10 +3,10 @@ open System.IO
 let depFilesMap =
     [
         ("./not_test.v", ["./not.v"])
-        ("./and_test.v", ["./and.v"])
-        ("./or_test.v", ["./or.v"])
-        ("./and16_test.v", ["./and16.v"])
-        ("./or16_test.v", ["./or16.v"])
+        ("./and_test.v", ["./and.v"; "./not.v"])
+        ("./or_test.v", ["./or.v"; "./not.v"])
+        ("./and16_test.v", ["./and16.v"; "./and.v"; "./not.v"])
+        ("./or16_test.v", ["./or16.v"; "./or.v"; "./not.v"])
     ]
     |> List.map (fun (mainInputFile, depFiles) -> (Path.GetFullPath mainInputFile, List.map Path.GetFullPath depFiles))
     |> Map.ofList

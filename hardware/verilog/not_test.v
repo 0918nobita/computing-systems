@@ -2,7 +2,7 @@ module NOTTEST;
     reg a;
     wire out;
 
-    NOT not_instance(a, out);
+    NOT not_instance(out, a);
 
     initial begin
         $dumpfile("not_test.vcd");

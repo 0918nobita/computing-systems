@@ -1,6 +1,6 @@
-module NOT(a, OUT);
+module NOT(out, a);
     input a;
-    output OUT;
+    output out;
 
-    nand(OUT, a, a);
+    nand(out, a, a);
 endmodule

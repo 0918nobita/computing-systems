@@ -1,7 +1,10 @@
-module AND(a, b, OUT);
+module AND(out, a, b);
     input a;
     input b;
-    output OUT;
+    output out;
 
-    assign OUT = a & b;
+    wire c;
+
+    nand(c, a, b);
+    NOT not_instance(out, c);
 endmodule

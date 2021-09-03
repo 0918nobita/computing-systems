@@ -2,7 +2,7 @@ module ANDTEST;
     reg a, b;
     wire out;
 
-    AND and_instance(a, b, out);
+    AND and_instance(out, a, b);
 
     initial begin
         $dumpfile("and_test.vcd");
