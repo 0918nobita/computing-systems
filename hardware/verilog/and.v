@@ -1,9 +1,7 @@
-module AND(
-    input wire a,
-    input wire b,
-    output wire out
-);
+module AND(a, b, OUT);
+    input a;
+    input b;
+    output OUT;
 
-assign out = a & b;
-
+    assign OUT = a & b;
 endmodule

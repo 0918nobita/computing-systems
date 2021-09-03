@@ -1,0 +1,5 @@
+rule compile
+    command = iverilog -o $out $in
+
+rule run_test
+    command = vvp $in

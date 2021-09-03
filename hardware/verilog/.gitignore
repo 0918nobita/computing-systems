@@ -1,3 +1,6 @@
+.ninja_log
+build.ninja
+
 # VCD (Value Change Dump) 波形ファイル
 *.vcd
 # シミュレーションオブジェクト

@@ -5,20 +5,14 @@
 - `iverilog`, `vvp` : Icarus Verilog
 - `gtkwave` : GTKWave (Wave Viewer)
 
-## Build
+## Build & Test
 
 ```bash
-make
-```
-
-## Run tests
-
-```bash
-make tests
+ninja
 ```
 
 ## Clean
 
 ```bash
-make clean
+ninja -t clean
 ```

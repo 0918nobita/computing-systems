@@ -1,9 +1,7 @@
-module OR(
-    input wire a,
-    input wire b,
-    output wire out
-);
+module OR(a, b, OUT);
+    input a;
+    input b;
+    output OUT;
 
-assign out = a | b;
-
+    assign OUT = a | b;
 endmodule

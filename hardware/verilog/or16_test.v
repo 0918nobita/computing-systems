@@ -1,14 +1,14 @@
-module AND16TEST;
+module OR16TEST;
     reg [15:0] a, b;
     wire [15:0] out;
 
-    AND16 and16_instance(out, a, b);
+    OR16 or16_instance(out, a, b);
 
     integer i;
 
     initial begin
-        $dumpfile("and16_test.vcd");
-        $dumpvars(1, AND16TEST);
+        $dumpfile("or16_test.vcd");
+        $dumpvars(0, OR16TEST);
 
         for (i = 0; i < 16; i = i + 1) begin
             a[i] = 0;
