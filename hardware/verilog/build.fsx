@@ -2,6 +2,7 @@ open System.IO
 
 let depFilesMap =
     [
+        ("./not_test.v", ["./not.v"])
         ("./and_test.v", ["./and.v"])
         ("./or_test.v", ["./or.v"])
         ("./and16_test.v", ["./and16.v"])
