@@ -1,9 +1,8 @@
 type Kind = In | Out | Wire
 
-type Stmt = {
-    From: Kind * uint8
-    To: Kind * uint8
-}
+type ChipRef = ChipRef of string
+
+type PinRef = PinRef of Kind * uint8
 
 type ChipDef =
     {
@@ -11,8 +10,7 @@ type ChipDef =
         InPins: uint8
         OutPins: uint8
         Wires: uint8
-        Chips: uint8
-        Stmts: Stmt array
+        Parts: ChipRef * PinRef array
     }
     override this.ToString() = $"[%s{this.Name}]"
 
