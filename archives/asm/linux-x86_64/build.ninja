@@ -1,0 +1,44 @@
+rule assemble
+    command = nasm -f elf64 -o $out $in
+
+rule link
+    command = ld -o $out $in
+
+build build/bad-addr.o: assemble bad-addr.s
+build build/bad-addr: link build/bad-addr.o
+
+build build/dyn-str.o: assemble dyn-str.s
+build build/dyn-str: link build/dyn-str.o
+
+build build/funcall.o: assemble funcall.s
+build build/funcall: link build/funcall.o
+
+build build/hello.o: assemble hello.s
+build build/hello: link build/hello.o
+
+build build/infinite-loop.o: assemble infinite-loop.s
+build build/infinite-loop: link build/infinite-loop.o
+
+build build/mmap.o: assemble mmap.s
+build build/mmap: link build/mmap.o
+
+build build/num-args.o: assemble num-args.s
+build build/num-args: link build/num-args.o
+
+build build/print-args.o: assemble print-args.s
+build build/print-args: link build/print-args.o
+
+build build/print-register.o: assemble print-register.s
+build build/print-register: link build/print-register.o
+
+build build/print-string.o: assemble print-string.s
+build build/print-string: link build/print-string.o
+
+build build/str-cmp.o: assemble str-cmp.s
+build build/str-cmp: link build/str-cmp.o
+
+build build/string.o: assemble string.s
+build build/string: link build/string.o
+
+build build/variables.o: assemble variables.s
+build build/variables: link build/variables.o
